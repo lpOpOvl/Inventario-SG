@@ -1,0 +1,8 @@
+name = "star-citizen-inventory"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "star-citizen-db"
+database_id = "ccfc2644-8206-4804-a15e-9a96d97ac78e"
