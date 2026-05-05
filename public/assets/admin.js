@@ -320,7 +320,67 @@ async function renderAdminObjItems(){
 async function objItemsDrop(e,i){e.preventDefault();e.currentTarget.style.borderColor='';if(objItemsDragSrcIdx===null||objItemsDragSrcIdx===i)return;const objs=[...objItemsCache];const[moved]=objs.splice(objItemsDragSrcIdx,1);objs.splice(i,0,moved);await fetch('/api/objectives_items',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({order:objs.map(o=>o.id)})});objItemsDragSrcIdx=null;renderAdminObjItems();}
 async function adminMoveObjItem(i,dir){const objs=[...objItemsCache];const ni=i+dir;if(ni<0||ni>=objs.length)return;[objs[i],objs[ni]]=[objs[ni],objs[i]];await fetch('/api/objectives_items',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({order:objs.map(o=>o.id)})});renderAdminObjItems();}
 async function adminAddObjItem(){const item=document.getElementById('newObjItemName').value.trim();const category=document.getElementById('newObjItemCat').value;const note=document.getElementById('newObjItemNote').value.trim();const qtyRaw=document.getElementById('newObjItemQty').value;let target_qty=null;if(qtyRaw!==''&&qtyRaw!==null){const v=parseFloat(qtyRaw);if(!isNaN(v)&&v>0)target_qty=v;}if(!item)return toast('Escreve o nome do item.','err');try{const r=await fetch('/api/objectives_items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item,note,category,target_qty})});if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}document.getElementById('newObjItemName').value='';document.getElementById('newObjItemNote').value='';document.getElementById('newObjItemQty').value='';renderAdminObjItems();toast(`"${item}" adicionado aos objetivos.`,'ok');}catch{toast('Erro ao adicionar.','err');}}
-async function adminDelObjItem(i){const obj=objItemsCache[i];if(!obj)return;try{await fetch(`/api/objectives_items?id=${obj.id}`,{method:'DELETE'});renderAdminObjItems();toast(`"${obj.item}" removido.`,'ok');}catch{toast('Erro ao remover.','err');}}
+async function adminDelObjItem(i){
+  const obj=objItemsCache[i];if(!obj)return;
+  // Load blueprint data and find ingredients of this item
+  const bpData=await _adminBpLoad();
+  const bp=bpData.find(b=>b.name.toLowerCase()===(obj.item||'').toLowerCase());
+  const ingNames=bp?bp.ingredients.map(ing=>ing.name.toLowerCase()):[];
+  let orphaned=[];
+  if(ingNames.length){
+    // Fetch current mineral objectives
+    let minObjs=[];
+    try{const r=await fetch('/api/objectives');const d=await r.json();minObjs=d.objectives||[];}catch{}
+    // Collect ingredients used by all OTHER remaining item objectives
+    const otherIngNames=new Set();
+    objItemsCache.forEach((oi,idx)=>{
+      if(idx===i)return;
+      const obp=bpData.find(b=>b.name.toLowerCase()===(oi.item||'').toLowerCase());
+      if(obp)obp.ingredients.forEach(ing=>otherIngNames.add(ing.name.toLowerCase()));
+    });
+    // Orphaned = ingredient exists in mineral objectives AND no other item needs it
+    orphaned=minObjs.filter(mo=>ingNames.includes((mo.item||'').toLowerCase())&&!otherIngNames.has((mo.item||'').toLowerCase()));
+  }
+  if(orphaned.length){
+    _showDelObjItemModal(obj,i,orphaned);
+  }else{
+    await _doDelObjItem(i,[]);
+  }
+}
+async function _doDelObjItem(i,mineralIds){
+  const obj=objItemsCache[i];if(!obj)return;
+  try{
+    await fetch(`/api/objectives_items?id=${obj.id}`,{method:'DELETE'});
+    for(const mid of mineralIds)await fetch(`/api/objectives?id=${mid}`,{method:'DELETE'});
+    renderAdminObjItems();toast(`"${obj.item}" removido.`,'ok');
+  }catch{toast('Erro ao remover.','err');}
+}
+function _showDelObjItemModal(obj,idx,orphaned){
+  const mid='_delObjItemModal';
+  const ex=document.getElementById(mid);if(ex)ex.remove();
+  const checks=orphaned.map(mo=>`<label style="display:flex;align-items:center;gap:8px;font-size:0.84rem;color:var(--text2);cursor:pointer;padding:4px 0;"><input type="checkbox" checked data-mid="${mo.id}" style="width:14px;height:14px;accent-color:var(--accent);cursor:pointer;"> ${esc(mo.item)}</label>`).join('');
+  const modal=document.createElement('div');
+  modal.id=mid;
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=`<div style="background:var(--card);border:1px solid var(--border2);border-radius:0.85rem;padding:24px 26px;max-width:380px;width:92%;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <div style="font-size:1rem;font-weight:700;color:var(--text);">Apagar "${esc(obj.item)}"</div>
+    <div style="font-size:0.84rem;color:var(--muted);line-height:1.55;">Os seguintes objetivos de minérios só são usados por este item. Apagar também?</div>
+    <div style="display:flex;flex-direction:column;gap:2px;">${checks}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('${mid}').remove()">Cancelar</button>
+      <button class="btn btn-outline btn-sm" onclick="_confirmDelObjItem(${idx},'${mid}',false)">Só o item</button>
+      <button class="btn btn-danger btn-sm" onclick="_confirmDelObjItem(${idx},'${mid}',true)">Apagar selecionados</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+async function _confirmDelObjItem(idx,mid,withMinerals){
+  const modal=document.getElementById(mid);
+  const mineralIds=[];
+  if(withMinerals&&modal)modal.querySelectorAll('input[type=checkbox]:checked').forEach(cb=>{if(cb.dataset.mid)mineralIds.push(cb.dataset.mid);});
+  if(modal)modal.remove();
+  await _doDelObjItem(idx,mineralIds);
+}
 
 async function adminAddObjItemManual(){
   const item=document.getElementById('manualObjItemName')?.value.trim();
