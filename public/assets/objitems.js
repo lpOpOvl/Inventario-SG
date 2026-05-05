@@ -113,15 +113,15 @@ function oiIngUpdate(cid,ingIdx,quality){
     });
   });
 
-  // Max possible deltas (all ings at q=1000) — for bar normalisation
-  const maxTotals={};
-  ings.forEach(ing=>{
-    ing.modifiers.forEach(mod=>{
-      const p=mod.property||'';if(!p)return;
-      if(!maxTotals[p])maxTotals[p]=0;
-      maxTotals[p]+=(_oiCalc(mod,1000)-_oiBase(mod))*100;
-    });
+  // Uniform bar pct = avg quality of ingredients that have modifiers
+  // All active bars grow together at the same width
+  let qSum=0,qCount=0;
+  ings.forEach((ing,idx)=>{
+    if(!ing.modifiers.length)return;
+    qSum+=(_oiQuality[cid]||{})[idx]??500;
+    qCount++;
   });
+  const uniformPct=qCount>0?((qSum/qCount)-500)/500*100:0;
 
   Object.entries(totals).forEach(([prop,rawVal])=>{
     const key=_propKey(prop);
@@ -132,11 +132,10 @@ function oiIngUpdate(cid,ingIdx,quality){
     const valEl=document.getElementById('oiv-'+cid+'-'+key);
     if(valEl){valEl.textContent=(disp>=0?'+':'')+disp.toFixed(1)+'%';valEl.className='oi-stat-val '+cls;}
 
-    // Bar width = actual delta / max possible delta (independent per property)
+    // Bar: uniform width for all active properties (delta≠0), 0% for neutral (+0.0%)
     const fillEl=document.getElementById('oib-'+cid+'-'+key);
     if(fillEl){
-      const maxDisp=Math.abs(_dispVal(prop,maxTotals[prop]||0));
-      const barPct=maxDisp>0?Math.min(100,Math.abs(disp)/maxDisp*100):0;
+      const barPct=Math.abs(rawVal)>0.001?uniformPct:0;
       fillEl.style.width=barPct+'%';
       fillEl.className='oi-bar-f '+cls;
     }
