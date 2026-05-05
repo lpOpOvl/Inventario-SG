@@ -73,12 +73,15 @@ function _oiPieceEval(segs,quality){
 
 function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(mod){return _oiCalc(mod,500);}
+// Properties where lower modifier = better player experience → show improvement as positive
+const _INVERTED=new Set(['recoil smoothness','recoil handling']);
+function _sign(mod){return _INVERTED.has((mod.property||'').toLowerCase())?-1:1;}
 function _fmtDelta(mod,quality){
-  const pct=(_oiCalc(mod,quality)-_oiBase(mod))*100;
+  const pct=(_oiCalc(mod,quality)-_oiBase(mod))*_sign(mod)*100;
   return(pct>=0?'+':'')+pct.toFixed(1)+'%';
 }
 function _deltaCls(mod,quality){
-  const d=_oiCalc(mod,quality)-_oiBase(mod);
+  const d=(_oiCalc(mod,quality)-_oiBase(mod))*_sign(mod);
   return d>0.0005?'pos':d<-0.0005?'neg':'neu';
 }
 
@@ -102,7 +105,7 @@ function _oiRebuildSummary(cid){
     const q=sl?+sl.value:500;
     (ing.modifiers||[]).forEach(mod=>{
       const p=mod.property||'Modifier';
-      const delta=(_oiCalc(mod,q)-_oiBase(mod))*100;
+      const delta=(_oiCalc(mod,q)-_oiBase(mod))*_sign(mod)*100;
       totals[p]=(totals[p]||0)+delta;
     });
   });
