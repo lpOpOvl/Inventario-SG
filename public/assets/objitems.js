@@ -10,6 +10,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
   await renderObjItems();
 });
 
+function _fmtProp(p){
+  if(!p)return'';
+  const part=p.includes('_')?p.split('_').slice(1).join(' '):p;
+  return part.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/\b\w/g,c=>c.toUpperCase());
+}
+
 async function _loadBp(){
   if(Object.keys(_bpMap).length)return;
   try{
@@ -22,8 +28,8 @@ async function _loadBp(){
       const ings=(bp.slots||[]).map(slot=>{
         const opt=slot.options&&slot.options[0];
         if(!opt||opt.type!=='resource'||!opt.resourceName)return null;
-        const mod=opt.modifiers&&opt.modifiers[0];
-        return{name:opt.resourceName,quantity:slot.requiredCount||1,modifierAtStart:mod?(mod.modifierAtStart??1):1,modifierAtEnd:mod?(mod.modifierAtEnd??1):1};
+        const mods=(opt.modifiers||[]).map(m=>({property:_fmtProp(m.gameplayProperty||''),modifierAtStart:m.modifierAtStart??1,modifierAtEnd:m.modifierAtEnd??1}));
+        return{name:opt.resourceName,quantity:slot.requiredCount||1,modifiers:mods};
       }).filter(Boolean);
       _bpMap[name.toLowerCase()]={name,category:bp.categoryName||'',ingredients:ings};
     });
@@ -38,15 +44,17 @@ async function renderObjItems(){
 
 function setObjItemCat(cat){objItemsActiveCat=cat;renderObjItemsList();}
 
-function _oiCalc(ing,quality){
+function _oiCalc(mod,quality){
   const q=Math.min(1000,Math.max(500,+quality));
-  return ing.modifierAtStart+(ing.modifierAtEnd-ing.modifierAtStart)*(q/1000);
+  return mod.modifierAtStart+(mod.modifierAtEnd-mod.modifierAtStart)*(q/1000);
 }
 
 function oiSliderUpdate(cid,ii,quality){
   const ings=_oiData[cid];if(!ings||!ings[ii])return;
-  const val=_oiCalc(ings[ii],quality);
-  const valEl=document.getElementById('oiv-'+cid+'-'+ii);if(valEl)valEl.textContent=val.toFixed(4);
+  (ings[ii].modifiers||[]).forEach((mod,mi)=>{
+    const el=document.getElementById('oiv-'+cid+'-'+ii+'-'+mi);
+    if(el)el.textContent=_oiCalc(mod,quality).toFixed(4);
+  });
   const qEl=document.getElementById('oiq-'+cid+'-'+ii);if(qEl)qEl.textContent=quality;
   const sl=document.getElementById('ois-'+cid+'-'+ii);if(sl)sl.style.setProperty('--pct',((+quality-500)/500*100)+'%');
 }
@@ -107,11 +115,12 @@ function renderObjItemsList(){
     const ings=_oiData[cid];
 
     const ingHtml=ings.length?`<div class="oi-ingredients">${ings.map((ing,ii)=>{
-      const defQ=900;const val=_oiCalc(ing,defQ);const pct=((defQ-500)/500*100);
+      const defQ=900;const pct=((defQ-500)/500*100);
+      const modsHtml=ing.modifiers.length?ing.modifiers.map((mod,mi)=>`<div class="oi-mod-row"><span class="oi-mod-prop">${esc(mod.property||'Modifier')}</span><span class="oi-mod-val" id="oiv-${cid}-${ii}-${mi}">${_oiCalc(mod,defQ).toFixed(4)}</span></div>`).join(''):'';
       return`<div class="oi-ingredient">
-        <div class="oi-ing-header">
-          <div class="oi-ing-name">${esc(ing.name)}<span class="oi-qty-badge">×${ing.quantity}</span></div>
-          <div class="oi-ing-stat"><span class="oi-ing-stat-val" id="oiv-${cid}-${ii}">${val.toFixed(4)}</span><div class="oi-ing-stat-label">modifier</div></div>
+        <div class="oi-ing-top">
+          <span class="oi-ing-name">${esc(ing.name)}<span class="oi-qty-badge">×${ing.quantity}</span></span>
+          ${modsHtml?`<div class="oi-mods">${modsHtml}</div>`:''}
         </div>
         <div class="oi-slider-row">
           <span class="oi-slider-lbl">500</span>
