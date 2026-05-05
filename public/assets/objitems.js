@@ -34,7 +34,6 @@ async function _loadBp(){
         const resName=isResource?(opt.resourceName||''):(opt.entityName||'');
         if(!resName)return null;
         const qty=isItem?(opt.quantity||1):(slot.requiredCount||1);
-        // Group raw modifier entries by property (piecewise segments)
         const propSegs={};
         (opt.modifiers||[]).forEach(m=>{
           const prop=_fmtProp(m.gameplayProperty||'');
@@ -60,7 +59,6 @@ async function renderObjItems(){
 
 function setObjItemCat(cat){objItemsActiveCat=cat;renderObjItemsList();}
 
-// Evaluate a piecewise-linear modifier at quality q
 function _oiPieceEval(segs,quality){
   const q=Math.max(0,Math.min(1000,+quality));
   let seg=segs[0];
@@ -73,59 +71,49 @@ function _oiPieceEval(segs,quality){
 
 function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(mod){return _oiCalc(mod,500);}
-// Flip sign in display: lower modifier = better, show as positive (e.g. Smoothness, Handling)
+
+// Flip sign in display: lower modifier = better, show as positive
 const _FLIP=new Set(['recoil smoothness','recoil handling','fuelrequirement']);
-// Keep sign but color as positive: negative value = improvement (e.g. Recoil Kick)
+// Keep sign negative but color green (negative = improvement)
 const _NEG_GOOD=new Set(['recoil kick']);
-function _fmtDelta(mod,quality){
-  const raw=(_oiCalc(mod,quality)-_oiBase(mod))*100;
-  const p=(mod.property||'').toLowerCase();
-  const pct=_FLIP.has(p)?-raw:raw;
-  return(pct>=0?'+':'')+pct.toFixed(1)+'%';
-}
-function _deltaCls(mod,quality){
-  const raw=_oiCalc(mod,quality)-_oiBase(mod);
-  const p=(mod.property||'').toLowerCase();
-  const eff=_FLIP.has(p)?-raw:_NEG_GOOD.has(p)?-raw:raw;
-  return eff>0.0005?'pos':eff<-0.0005?'neg':'neu';
-}
 
-function oiSliderUpdate(cid,ii,quality){
-  const ings=_oiData[cid];if(!ings||!ings[ii])return;
-  (ings[ii].modifiers||[]).forEach((mod,mi)=>{
-    const el=document.getElementById('oiv-'+cid+'-'+ii+'-'+mi);if(!el)return;
-    el.textContent=_fmtDelta(mod,quality);
-    el.className='oi-mod-val '+_deltaCls(mod,quality);
-  });
-  const qEl=document.getElementById('oiq-'+cid+'-'+ii);if(qEl)qEl.textContent=quality;
-  const sl=document.getElementById('ois-'+cid+'-'+ii);if(sl)sl.style.setProperty('--pct',((+quality-500)/500*100)+'%');
-  _oiRebuildSummary(cid);
+function _dispVal(prop,rawPct){
+  const pk=(prop||'').toLowerCase();
+  return _FLIP.has(pk)?-rawPct:rawPct;
 }
+function _effVal(prop,rawPct){
+  const pk=(prop||'').toLowerCase();
+  return(_FLIP.has(pk)||_NEG_GOOD.has(pk))?-rawPct:rawPct;
+}
+function _valCls(eff){return eff>0.01?'pos':eff<-0.01?'neg':'neu';}
+function _propKey(prop){return prop.toLowerCase().replace(/[^a-z0-9]/g,'-');}
 
-function _oiRebuildSummary(cid){
-  const ings=_oiData[cid];if(!ings)return;
+// Single-quality update for a card
+function oiUpdate(cid,quality){
+  const ings=_oiData[cid]||[];
   const totals={};
-  ings.forEach((ing,ii)=>{
-    const sl=document.getElementById('ois-'+cid+'-'+ii);
-    const q=sl?+sl.value:500;
-    (ing.modifiers||[]).forEach(mod=>{
-      const p=mod.property||'Modifier';
-      const delta=(_oiCalc(mod,q)-_oiBase(mod))*100;
-      totals[p]=(totals[p]||0)+delta;
+  ings.forEach(ing=>{
+    ing.modifiers.forEach(mod=>{
+      const p=mod.property||'';if(!p)return;
+      if(!totals[p])totals[p]=0;
+      totals[p]+=(_oiCalc(mod,quality)-_oiBase(mod))*100;
     });
   });
-  const el=document.getElementById('oi-sum-'+cid);if(!el)return;
-  const props=Object.keys(totals);
-  if(!props.length){el.style.display='none';return;}
-  el.style.display='';
-  el.innerHTML='<div class="oi-sum-label">Total combinado</div>'+props.map(p=>{
-    const v=totals[p];
-    const pk=p.toLowerCase();
-    const eff=_FLIP.has(pk)?-v:_NEG_GOOD.has(pk)?-v:v;
-    const cls=eff>0.01?'pos':eff<-0.01?'neg':'neu';
-    const disp=_FLIP.has(pk)?-v:v;
-    return`<div class="oi-sum-row"><span class="oi-sum-prop">${esc(p)}</span><span class="oi-sum-val oi-mod-val ${cls}">${(disp>=0?'+':'')+disp.toFixed(1)+'%'}</span></div>`;
-  }).join('');
+  const pct=((+quality-500)/500*100);
+  const sl=document.getElementById('ois-'+cid);
+  if(sl)sl.style.setProperty('--pct',pct+'%');
+  const qEl=document.getElementById('oiq-'+cid);
+  if(qEl)qEl.textContent=quality;
+  Object.entries(totals).forEach(([prop,rawVal])=>{
+    const key=_propKey(prop);
+    const disp=_dispVal(prop,rawVal);
+    const eff=_effVal(prop,rawVal);
+    const cls=_valCls(eff);
+    const valEl=document.getElementById('oiv-'+cid+'-'+key);
+    if(valEl){valEl.textContent=(disp>=0?'+':'')+disp.toFixed(1)+'%';valEl.className='oi-stat-val '+cls;}
+    const fillEl=document.getElementById('oib-'+cid+'-'+key);
+    if(fillEl){fillEl.style.width=pct+'%';fillEl.className='oi-bar-f '+cls;}
+  });
 }
 
 function renderObjItemsList(){
@@ -162,16 +150,16 @@ function renderObjItemsList(){
   const items=objItemsActiveCat==='__todos__'?objs.map((o,i)=>({o,i})):(cats[objItemsActiveCat]||[]);
   const accentColors=['#fbbf24','#94a3b8','#b47c3c','#6366f1','#22c55e','#60a5fa','#f472b6','#34d399'];
   const catIcons={
-    'Armas (FPS)':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>',
-    'Armadura (FPS)':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
-    'Armas (Veículo)':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
-    'Componentes (Veículo)':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>',
-    'Componentes (Mining)':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>'
+    'Armas (FPS)':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 3a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3H6a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3V6a3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3h12a3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>',
+    'Armadura (FPS)':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+    'Armas (Veículo)':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    'Componentes (Veículo)':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>',
+    'Componentes (Mining)':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>'
   };
 
   Object.keys(_oiData).forEach(k=>delete _oiData[k]);
 
-  el.innerHTML=`<div class="obj-list">${items.map(({o,i})=>{
+  el.innerHTML=`<div class="oi-list">${items.map(({o,i})=>{
     const catColor=OBJ_ITEM_COLORS[o.category||'']||'#94a3b8';
     const cardAccent=objItemsActiveCat==='__todos__'?catColor:accentColors[i%accentColors.length];
     const hasTarget=o.target_qty!=null&&parseFloat(o.target_qty)>0;
@@ -183,39 +171,48 @@ function renderObjItemsList(){
     _oiData[cid]=bp?bp.ingredients:[];
     const ings=_oiData[cid];
 
-    const hasMods=ings.some(ing=>ing.modifiers.length>0);
-    const ingHtml=ings.length?`<div class="oi-ingredients">${ings.map((ing,ii)=>{
-      const defQ=500;const pct=0;
-      const modsHtml=ing.modifiers.length?ing.modifiers.map((mod,mi)=>`<div class="oi-mod-row"><span class="oi-mod-prop">${esc(mod.property||'Modifier')}</span><span class="oi-mod-val ${_deltaCls(mod,defQ)}" id="oiv-${cid}-${ii}-${mi}">${_fmtDelta(mod,defQ)}</span></div>`).join(''):'';
-      return`<div class="oi-ingredient">
-        <div class="oi-ing-top">
-          <span class="oi-ing-name">${esc(ing.name)}<span class="oi-qty-badge">×${ing.quantity}</span></span>
-          ${modsHtml?`<div class="oi-mods">${modsHtml}</div>`:''}
+    // Collect unique properties across all ingredients
+    const propSet=[];const seen=new Set();
+    ings.forEach(ing=>ing.modifiers.forEach(mod=>{
+      const p=mod.property||'';if(!p||seen.has(p))return;
+      seen.add(p);propSet.push(p);
+    }));
+    const hasMods=propSet.length>0;
+
+    const statRows=propSet.map(prop=>{
+      const key=_propKey(prop);
+      return`<div class="oi-stat">
+        <div class="oi-stat-row">
+          <span class="oi-stat-lbl">${esc(prop)}</span>
+          <span class="oi-stat-val neu" id="oiv-${cid}-${key}">+0.0%</span>
         </div>
-        <div class="oi-slider-row">
-          <span class="oi-slider-lbl">500</span>
-          <input type="range" class="oi-slider" id="ois-${cid}-${ii}" min="500" max="1000" step="1" value="${defQ}" style="--pct:${pct}%" oninput="oiSliderUpdate(${cid},${ii},+this.value)">
-          <span class="oi-slider-lbl">1000</span>
-          <span class="oi-slider-qval" id="oiq-${cid}-${ii}">${defQ}</span>
-        </div>
+        <div class="oi-bar"><div class="oi-bar-f neu" id="oib-${cid}-${key}" style="width:0%"></div></div>
       </div>`;
-    }).join('')}${hasMods?`<div class="oi-summary" id="oi-sum-${cid}"></div>`:''}</div>`:'';
+    }).join('');
+
+    const catBadge=objItemsActiveCat==='__todos__'?`<span style="font-size:0.65rem;font-weight:600;color:${catColor};opacity:0.85;flex-shrink:0;white-space:nowrap;">${esc(o.category||'')}</span>`:'';
+    const noteBadge=o.note?`<span style="font-size:0.75rem;color:var(--muted);">${esc(o.note)}</span>`:'';
+    const targetBadge=hasTarget?`<div style="text-align:right;flex-shrink:0;"><div style="font-size:0.58rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Meta</div><div style="font-size:1rem;font-weight:700;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.65rem;color:var(--muted);">UND</span></div></div>`:'';
 
     return`<div class="obj-card oi-card" style="--obj-accent:${cardAccent};--oi-accent:${catColor};">
-      <div class="oi-main-row">
-        <div class="obj-rank rn">${i+1}º</div>
-        <div style="width:30px;height:30px;border-radius:0.4rem;background:${iconBg};display:flex;align-items:center;justify-content:center;color:${catColor};flex-shrink:0;">${iconSvg}</div>
-        <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;overflow:hidden;">
-          <span style="font-size:1.15rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(o.item)}</span>
-          ${objItemsActiveCat==='__todos__'?`<span style="font-size:0.72rem;font-weight:600;color:${catColor};white-space:nowrap;flex-shrink:0;opacity:0.85;">${esc(o.category||'')}</span>`:''}
+      <div class="oi-head">
+        <div class="oi-head-l">
+          <span class="obj-rank rn">${i+1}º</span>
+          <div class="oi-icon2" style="background:${iconBg};color:${catColor};">${iconSvg}</div>
+          <span class="oi-name2">${esc(o.item)}</span>
+          ${catBadge}
         </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
-          ${o.note?`<span style="font-size:0.8rem;color:var(--muted);">${esc(o.note)}</span>`:''}
-          ${hasTarget?`<div style="text-align:right;"><div style="font-size:0.6rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Meta</div><div style="font-size:1.1rem;font-weight:800;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.7rem;font-weight:600;color:var(--muted);">UND</span></div></div>`:''}
-        </div>
+        <div class="oi-head-r">${noteBadge}${targetBadge}</div>
       </div>
-      ${ingHtml}
+      ${hasMods?`<div class="oi-stats">
+        ${statRows}
+        <div class="oi-qual">
+          <span class="oi-ql">500</span>
+          <input type="range" class="oi-slider" id="ois-${cid}" min="500" max="1000" step="1" value="500" style="--pct:0%" oninput="oiUpdate(${cid},+this.value)">
+          <span class="oi-ql">1000</span>
+          <span class="oi-qv" id="oiq-${cid}">500</span>
+        </div>
+      </div>`:''}
     </div>`;
   }).join('')}</div>`;
-  items.forEach(({o,i})=>_oiRebuildSummary(o.id||i));
 }
