@@ -28,7 +28,17 @@ async function _loadBp(){
       const ings=(bp.slots||[]).map(slot=>{
         const opt=slot.options&&slot.options[0];
         if(!opt||opt.type!=='resource'||!opt.resourceName)return null;
-        const mods=(opt.modifiers||[]).map(m=>({property:_fmtProp(m.gameplayProperty||''),modifierAtStart:m.modifierAtStart??1,modifierAtEnd:m.modifierAtEnd??1,startQuality:m.startQuality??0,endQuality:m.endQuality??1000}));
+        // Group raw modifier entries by property (piecewise segments)
+        const propSegs={};
+        (opt.modifiers||[]).forEach(m=>{
+          const prop=_fmtProp(m.gameplayProperty||'');
+          if(!prop)return;
+          if(!propSegs[prop])propSegs[prop]=[];
+          propSegs[prop].push({sq:m.startQuality??0,eq:m.endQuality??1000,vs:m.modifierAtStart??1,ve:m.modifierAtEnd??1});
+        });
+        const mods=Object.entries(propSegs)
+          .map(([property,segs])=>({property,segs:segs.sort((a,b)=>a.sq-b.sq)}))
+          .filter(mod=>Math.abs(_oiPieceEval(mod.segs,1000)-_oiPieceEval(mod.segs,500))>0.0005);
         return{name:opt.resourceName,quantity:slot.requiredCount||1,modifiers:mods};
       }).filter(Boolean);
       _bpMap[name.toLowerCase()]={name,category:bp.categoryName||'',ingredients:ings};
@@ -44,22 +54,27 @@ async function renderObjItems(){
 
 function setObjItemCat(cat){objItemsActiveCat=cat;renderObjItemsList();}
 
-function _oiCalc(mod,quality){
-  const q=Math.min(1000,Math.max(500,+quality));
-  const sq=mod.startQuality??0;
-  const eq=mod.endQuality??1000;
-  if(eq<=sq)return mod.modifierAtStart;
+// Evaluate a piecewise-linear modifier at quality q
+function _oiPieceEval(segs,quality){
+  const q=Math.max(0,Math.min(1000,+quality));
+  let seg=segs[0];
+  for(const s of segs){if(q>=s.sq)seg=s;else break;}
+  const{sq,eq,vs,ve}=seg;
+  if(eq<=sq)return vs;
   const t=Math.max(0,Math.min(1,(q-sq)/(eq-sq)));
-  return mod.modifierAtStart+(mod.modifierAtEnd-mod.modifierAtStart)*t;
+  return vs+(ve-vs)*t;
 }
+
+function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(mod){return _oiCalc(mod,500);}
+// Always show absolute delta (any change from Q=500 is a benefit, sign depends on stat direction)
 function _fmtDelta(mod,quality){
-  const pct=(_oiCalc(mod,quality)-_oiBase(mod))*100;
-  return(pct>=0?'+':'')+pct.toFixed(1)+'%';
+  const pct=Math.abs((_oiCalc(mod,quality)-_oiBase(mod))*100);
+  return'+'+pct.toFixed(1)+'%';
 }
 function _deltaCls(mod,quality){
-  const d=_oiCalc(mod,quality)-_oiBase(mod);
-  return d>0.001?'pos':d<-0.001?'neg':'neu';
+  const d=Math.abs(_oiCalc(mod,quality)-_oiBase(mod));
+  return d>0.0005?'pos':'neu';
 }
 
 function oiSliderUpdate(cid,ii,quality){
@@ -82,7 +97,7 @@ function _oiRebuildSummary(cid){
     const q=sl?+sl.value:500;
     (ing.modifiers||[]).forEach(mod=>{
       const p=mod.property||'Modifier';
-      const delta=(_oiCalc(mod,q)-_oiBase(mod))*100;
+      const delta=Math.abs((_oiCalc(mod,q)-_oiBase(mod))*100);
       totals[p]=(totals[p]||0)+delta;
     });
   });
@@ -91,8 +106,8 @@ function _oiRebuildSummary(cid){
   if(!props.length){el.style.display='none';return;}
   el.style.display='';
   el.innerHTML='<div class="oi-sum-label">Total combinado</div>'+props.map(p=>{
-    const v=totals[p];const cls=v>0.01?'pos':v<-0.01?'neg':'neu';
-    return`<div class="oi-sum-row"><span class="oi-sum-prop">${esc(p)}</span><span class="oi-sum-val oi-mod-val ${cls}">${(v>=0?'+':'')+v.toFixed(1)+'%'}</span></div>`;
+    const v=totals[p];const cls=v>0.01?'pos':'neu';
+    return`<div class="oi-sum-row"><span class="oi-sum-prop">${esc(p)}</span><span class="oi-sum-val oi-mod-val ${cls}">+${v.toFixed(1)}%</span></div>`;
   }).join('');
 }
 
