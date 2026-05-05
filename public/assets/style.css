@@ -515,8 +515,8 @@ tr.editing .ff input,tr.editing .ff select{height:30px;font-size:0.82rem;}
 .oi-bar-f.pos{background:#22c55e;}.oi-bar-f.neg{background:#f87171;}.oi-bar-f.neu{background:var(--muted2);}
 .oi-ings{border-top:1px solid var(--border);padding:8px 16px 12px;display:flex;flex-direction:column;gap:7px;}
 .oi-ing-row{display:flex;align-items:center;gap:8px;min-width:0;}
-.oi-ing-name{font-size:0.74rem;font-weight:600;color:var(--text2);flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.oi-ing-qty{font-size:0.64rem;font-weight:600;color:var(--muted);flex-shrink:0;}
+.oi-ing-name{font-size:0.74rem;font-weight:600;color:var(--text2);flex:0 0 90px;width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.oi-ing-qty{font-size:0.64rem;font-weight:600;color:var(--muted);flex:0 0 22px;text-align:right;}
 .oi-qv{font-size:0.7rem;font-weight:700;color:var(--accent2);min-width:30px;text-align:right;flex-shrink:0;}
 .oi-slider{flex:1;min-width:60px;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:linear-gradient(to right,var(--accent) 0%,var(--accent) var(--pct,0%),var(--muted2) var(--pct,0%),var(--muted2) 100%);outline:none;cursor:pointer;}
 .oi-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent2);border:2px solid var(--bg);cursor:pointer;transition:transform 0.1s;}
