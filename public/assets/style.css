@@ -510,8 +510,13 @@ tr.editing .ff input,tr.editing .ff select{height:30px;font-size:0.82rem;}
 .oi-slider-row{display:flex;align-items:center;gap:6px;}
 .oi-slider-lbl{font-size:0.65rem;color:var(--muted);white-space:nowrap;flex-shrink:0;}
 .oi-slider-qval{font-size:0.7rem;font-weight:700;color:var(--accent2);min-width:28px;text-align:right;flex-shrink:0;}
-.oi-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:linear-gradient(to right,var(--accent) 0%,var(--accent) var(--pct,80%),var(--muted2) var(--pct,80%),var(--muted2) 100%);outline:none;cursor:pointer;}
-.oi-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent2);border:2px solid var(--bg);cursor:pointer;transition:transform 0.1s;}
-.oi-slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
-.oi-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent2);border:2px solid var(--bg);cursor:pointer;}
+.oi-slider{flex:1;-webkit-appearance:none;appearance:none;height:3px;border-radius:2px;background:linear-gradient(to right,var(--accent) 0%,var(--accent) var(--pct,0%),var(--muted2) var(--pct,0%),var(--muted2) 100%);outline:none;cursor:pointer;}
+.oi-slider::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--accent2);border:2px solid var(--bg);cursor:pointer;transition:transform 0.1s;}
+.oi-slider::-webkit-slider-thumb:hover{transform:scale(1.25);}
+.oi-slider::-moz-range-thumb{width:10px;height:10px;border-radius:50%;background:var(--accent2);border:2px solid var(--bg);cursor:pointer;}
+.oi-summary{border-top:1px solid var(--border);margin-top:8px;padding:8px 20px 12px;display:flex;flex-direction:column;gap:3px;}
+.oi-sum-label{font-size:0.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px;}
+.oi-sum-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.oi-sum-prop{font-size:0.75rem;color:var(--text2);}
+.oi-sum-val{font-size:0.82rem;font-weight:700;font-variant-numeric:tabular-nums;}
 .oi-qty-badge{font-size:0.7rem;font-weight:600;color:var(--muted);background:var(--card);border:1px solid var(--border2);border-radius:0.25rem;padding:1px 6px;}

@@ -45,7 +45,7 @@ async function renderObjItems(){
 function setObjItemCat(cat){objItemsActiveCat=cat;renderObjItemsList();}
 
 function _oiCalc(mod,quality){
-  const q=Math.min(1000,Math.max(0,+quality));
+  const q=Math.min(1000,Math.max(500,+quality));
   return mod.modifierAtStart+(mod.modifierAtEnd-mod.modifierAtStart)*(q/1000);
 }
 function _fmtDelta(mod,quality){
@@ -67,7 +67,30 @@ function oiSliderUpdate(cid,ii,quality){
     el.className='oi-mod-val '+_deltaCls(mod,quality);
   });
   const qEl=document.getElementById('oiq-'+cid+'-'+ii);if(qEl)qEl.textContent=quality;
-  const sl=document.getElementById('ois-'+cid+'-'+ii);if(sl)sl.style.setProperty('--pct',(+quality/1000*100)+'%');
+  const sl=document.getElementById('ois-'+cid+'-'+ii);if(sl)sl.style.setProperty('--pct',((+quality-500)/500*100)+'%');
+  _oiRebuildSummary(cid);
+}
+
+function _oiRebuildSummary(cid){
+  const ings=_oiData[cid];if(!ings)return;
+  const totals={};
+  ings.forEach((ing,ii)=>{
+    const sl=document.getElementById('ois-'+cid+'-'+ii);
+    const q=sl?+sl.value:500;
+    (ing.modifiers||[]).forEach(mod=>{
+      const p=mod.property||'Modifier';
+      const delta=(_oiCalc(mod,q)-_oiCalc(mod,500))*100;
+      totals[p]=(totals[p]||0)+delta;
+    });
+  });
+  const el=document.getElementById('oi-sum-'+cid);if(!el)return;
+  const props=Object.keys(totals);
+  if(!props.length){el.style.display='none';return;}
+  el.style.display='';
+  el.innerHTML='<div class="oi-sum-label">Total combinado</div>'+props.map(p=>{
+    const v=totals[p];const cls=v>0.01?'pos':v<-0.01?'neg':'neu';
+    return`<div class="oi-sum-row"><span class="oi-sum-prop">${esc(p)}</span><span class="oi-sum-val oi-mod-val ${cls}">${(v>=0?'+':'')+v.toFixed(1)+'%'}</span></div>`;
+  }).join('');
 }
 
 function renderObjItemsList(){
@@ -125,8 +148,9 @@ function renderObjItemsList(){
     _oiData[cid]=bp?bp.ingredients:[];
     const ings=_oiData[cid];
 
+    const hasMods=ings.some(ing=>ing.modifiers.length>0);
     const ingHtml=ings.length?`<div class="oi-ingredients">${ings.map((ing,ii)=>{
-      const defQ=500;const pct=(defQ/1000*100);
+      const defQ=500;const pct=0;
       const modsHtml=ing.modifiers.length?ing.modifiers.map((mod,mi)=>`<div class="oi-mod-row"><span class="oi-mod-prop">${esc(mod.property||'Modifier')}</span><span class="oi-mod-val ${_deltaCls(mod,defQ)}" id="oiv-${cid}-${ii}-${mi}">${_fmtDelta(mod,defQ)}</span></div>`).join(''):'';
       return`<div class="oi-ingredient">
         <div class="oi-ing-top">
@@ -134,13 +158,13 @@ function renderObjItemsList(){
           ${modsHtml?`<div class="oi-mods">${modsHtml}</div>`:''}
         </div>
         <div class="oi-slider-row">
-          <span class="oi-slider-lbl">0</span>
-          <input type="range" class="oi-slider" id="ois-${cid}-${ii}" min="0" max="1000" step="1" value="${defQ}" style="--pct:${pct}%" oninput="oiSliderUpdate(${cid},${ii},+this.value)">
+          <span class="oi-slider-lbl">500</span>
+          <input type="range" class="oi-slider" id="ois-${cid}-${ii}" min="500" max="1000" step="1" value="${defQ}" style="--pct:${pct}%" oninput="oiSliderUpdate(${cid},${ii},+this.value)">
           <span class="oi-slider-lbl">1000</span>
           <span class="oi-slider-qval" id="oiq-${cid}-${ii}">${defQ}</span>
         </div>
       </div>`;
-    }).join('')}</div>`:'';
+    }).join('')}${hasMods?`<div class="oi-summary" id="oi-sum-${cid}"></div>`:''}</div>`:'';
 
     return`<div class="obj-card oi-card" style="--obj-accent:${cardAccent};--oi-accent:${catColor};">
       <div class="oi-main-row">
@@ -158,4 +182,5 @@ function renderObjItemsList(){
       ${ingHtml}
     </div>`;
   }).join('')}</div>`;
+  items.forEach(({o,i})=>_oiRebuildSummary(o.id||i));
 }
