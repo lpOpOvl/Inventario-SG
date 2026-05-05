@@ -388,12 +388,14 @@ async function bpConfirmAdd(){
     toast(`"${bp.name}" adicionado.`,'ok');
   }catch{return toast('Erro ao adicionar item.','err');}
   if(bp.ingredients.length){
+    const catMap={'Armas (FPS)':'Armas FPS','Armadura (FPS)':'Armaduras FPS','Armas (Veículo)':'Armas de Nave','Componentes (Veículo)':'Componentes de Nave','Componentes (Mining)':'Componentes de Mineração'};
+    const objCat=catMap[category]||'Componentes de Mineração';
     try{
       const objR=await fetch('/api/objectives');const objD=await objR.json();
       const existing=new Set((objD.objectives||[]).map(o=>o.item));
       for(const ing of bp.ingredients){
         if(ing.name&&!existing.has(ing.name)){
-          await fetch('/api/objectives',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:ing.name,note:'Mineração',category:'Componentes de Mineração',target_qty:null})});
+          await fetch('/api/objectives',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:ing.name,note:'',category:objCat,target_qty:null})});
         }
       }
     }catch{}
