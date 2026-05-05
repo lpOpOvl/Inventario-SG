@@ -35,6 +35,8 @@ function requireAuth(){
   return true;
 }
 function logout(){
+  const u=localStorage.getItem('sg_user');
+  if(u)try{fetch('/api/activity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,action:'logout'}),keepalive:true});}catch{}
   localStorage.removeItem('sg_user');
   window.location.href='/index.html';
 }

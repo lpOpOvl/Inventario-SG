@@ -27,6 +27,10 @@ export async function onRequest(context) {
     const hashed = await hashPassword(password);
     if (player.password !== hashed) return Response.json({ error: "Password incorreta." }, { status: 401, headers });
 
+    try {
+      const ua = (request.headers.get('User-Agent') || '').slice(0, 300);
+      await env.DB.prepare("INSERT INTO activity_logs (username, action, user_agent) VALUES (?, 'login', ?)").bind(username, ua).run();
+    } catch {}
     return Response.json({ success: true, player: { id: player.id, username: player.username, created_at: player.created_at } }, { headers });
   } catch (err) {
     return Response.json({ error: "erro interno: " + err.message }, { status: 500, headers });

@@ -2,12 +2,13 @@ let orgI=[];
 let objCache=[];
 let adminMenuOpen=true;
 let activeAdminSection='users';
-const ADMIN_SECTIONS=['users','additem','saida','obj','objitems','rules','catalog','locs','export'];
+const ADMIN_SECTIONS=['users','additem','saida','obj','objitems','rules','catalog','locs','export','activity'];
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
   await initPage();
   if(!isAdmin()){window.location.href='/dashboard.html';return;}
+  if(cUser==='lpOpOvl'){const an=document.getElementById('nav-admin-activity');if(an)an.style.display='';}
   buildOreOptions();
   await loadAdminPageData();
   setAdminSection('users',document.getElementById('nav-admin-users'));
@@ -42,6 +43,7 @@ function setAdminSection(sec,el){
   if(sec==='obj')renderAdminObj();
   if(sec==='objitems')renderAdminObjItems();
   if(sec==='rules')renderAdminRules();
+  if(sec==='activity')renderAdminActivity();
 }
 
 // ── USUÁRIOS ──────────────────────────────────────────────────────────────
@@ -471,6 +473,104 @@ async function bpConfirmAdd(){
   }
   bpClearSel();
   renderAdminObjItems();
+}
+
+// ── ATIVIDADE ─────────────────────────────────────────────────────────────
+async function renderAdminActivity(){
+  const el=document.getElementById('adminActivityContent');
+  if(!el)return;
+  el.innerHTML='<div style="color:var(--muted);font-size:0.85rem;">A carregar...</div>';
+  let logs=[];
+  try{const r=await fetch('/api/activity');const d=await r.json();logs=d.logs||[];}catch{el.innerHTML='<div style="color:#f87171;">Erro ao carregar.</div>';return;}
+
+  const now=Date.now();
+  function parseTs(ts){return new Date((ts||'').replace(' ','T')+'Z').getTime();}
+  function timeAgo(ts){const s=Math.floor((now-parseTs(ts))/1000);if(s<60)return'agora';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d atrás';}
+  function devIcon(ua){return/Mobile|Android|iPhone|iPad/i.test(ua||'')?'📱':'🖥️';}
+
+  const today=new Date().toISOString().slice(0,10);
+  const weekAgo=new Date(now-7*864e5).toISOString().slice(0,10);
+
+  const loginsToday=logs.filter(l=>l.action==='login'&&(l.timestamp||'').startsWith(today)).length;
+  const activeWeek=new Set(logs.filter(l=>l.timestamp>=weekAgo.replace('T',' ')).map(l=>l.username)).size;
+  const totalLogins=logs.filter(l=>l.action==='login').length;
+  const totalLogouts=logs.filter(l=>l.action==='logout').length;
+
+  // Per-user login counts
+  const userCnt={};
+  logs.filter(l=>l.action==='login').forEach(l=>{userCnt[l.username]=(userCnt[l.username]||0)+1;});
+  const topUsers=Object.entries(userCnt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // Daily logins last 10 days
+  const days=[];for(let i=9;i>=0;i--){const d=new Date(now-i*864e5);days.push(d.toISOString().slice(0,10));}
+  const dayCnt={};
+  logs.filter(l=>l.action==='login').forEach(l=>{const d=(l.timestamp||'').slice(0,10);if(dayCnt[d]!==undefined||days.includes(d))dayCnt[d]=(dayCnt[d]||0)+1;});
+  const dayMax=Math.max(1,...days.map(d=>dayCnt[d]||0));
+
+  const statCard=(val,lbl,clr='var(--accent2)')=>`<div style="background:var(--card2);border:1px solid var(--border2);border-radius:0.65rem;padding:14px 18px;text-align:center;flex:1;min-width:100px;">
+    <div style="font-size:1.6rem;font-weight:800;color:${clr};">${val}</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">${lbl}</div>
+  </div>`;
+
+  const chartBars=days.map(d=>{
+    const cnt=dayCnt[d]||0;
+    const pct=Math.round(cnt/dayMax*100);
+    const label=d.slice(5); // MM-DD
+    return`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;">
+      <div style="font-size:0.68rem;color:var(--accent2);font-weight:700;">${cnt||''}</div>
+      <div style="flex:1;width:100%;display:flex;align-items:flex-end;min-height:40px;">
+        <div style="width:100%;background:${cnt>0?'var(--accent)':'var(--muted2)'};border-radius:3px 3px 0 0;height:${pct||2}%;min-height:${cnt>0?'4px':'2px'};transition:height 0.3s;"></div>
+      </div>
+      <div style="font-size:0.62rem;color:var(--muted);white-space:nowrap;">${label}</div>
+    </div>`;
+  }).join('');
+
+  const topUsersHtml=topUsers.map(([u,c])=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:0.82rem;font-weight:600;color:var(--text);">${esc(u)}</span>
+      <span style="font-size:0.78rem;color:var(--accent2);font-weight:700;">${c}×</span>
+    </div>`).join('');
+
+  const logRows=logs.slice(0,120).map(l=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:6px 8px;font-size:0.75rem;">${devIcon(l.user_agent)}</td>
+      <td style="padding:6px 8px;font-size:0.82rem;font-weight:600;color:var(--text);">${esc(l.username)}</td>
+      <td style="padding:6px 8px;">
+        <span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:3px;background:${l.action==='login'?'rgba(34,197,94,0.12)':'rgba(248,113,113,0.12)'};color:${l.action==='login'?'#22c55e':'#f87171'};">${l.action==='login'?'login':'logout'}</span>
+      </td>
+      <td style="padding:6px 8px;font-size:0.74rem;color:var(--muted);">${timeAgo(l.timestamp)}</td>
+      <td style="padding:6px 8px;font-size:0.68rem;color:var(--muted2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((l.user_agent||'').split(' ').slice(-2).join(' '))}</td>
+    </tr>`).join('');
+
+  el.innerHTML=`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+      ${statCard(loginsToday,'Logins hoje','#22c55e')}
+      ${statCard(activeWeek,'Ativos (7d)','var(--accent2)')}
+      ${statCard(totalLogins,'Total logins')}
+      ${statCard(totalLogouts,'Total logouts','#f87171')}
+    </div>
+    <div class="admin-grid" style="margin-bottom:16px;">
+      <div class="admin-card">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px;">Logins por dia (últimos 10d)</div>
+        <div style="display:flex;gap:6px;align-items:flex-end;height:80px;">${chartBars}</div>
+      </div>
+      <div class="admin-card">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Top utilizadores</div>
+        ${topUsersHtml||'<div style="color:var(--muted);font-size:0.82rem;">Sem dados.</div>'}
+      </div>
+    </div>
+    <div class="admin-card" style="padding:0;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="border-bottom:1px solid var(--border2);">
+          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;"></th>
+          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;">Usuário</th>
+          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;">Ação</th>
+          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;">Quando</th>
+          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;">Browser</th>
+        </tr></thead>
+        <tbody>${logRows}</tbody>
+      </table>
+    </div>`;
 }
 
 // ── REGRAS ────────────────────────────────────────────────────────────────

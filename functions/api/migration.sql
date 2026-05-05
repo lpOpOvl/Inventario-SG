@@ -1,6 +1,14 @@
 -- Executar na D1 via Cloudflare Dashboard ou Wrangler
 -- Dashboard: Workers & Pages → D1 → a tua base de dados → Console
 
+CREATE TABLE IF NOT EXISTS activity_logs (
+  id         INTEGER  PRIMARY KEY AUTOINCREMENT,
+  username   TEXT     NOT NULL,
+  action     TEXT     NOT NULL,  -- 'login' | 'logout'
+  timestamp  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  user_agent TEXT     DEFAULT ''
+);
+
 CREATE TABLE IF NOT EXISTS objectives_items (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   item      TEXT    NOT NULL,
