@@ -340,9 +340,6 @@ async function _adminBpLoad(){
       }).filter(Boolean);
       return{name:bp.blueprintName||'',category:bp.categoryName||'',ingredients:ings};
     }).filter(bp=>bp.name);
-    const cats=[...new Set(_adminBpData.map(b=>b.category).filter(Boolean))].sort();
-    const sel=document.getElementById('bpCatFilter');
-    if(sel)sel.innerHTML='<option value="">Todas as categorias</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   }catch(e){_adminBpData=[];toast('Erro ao carregar blueprints: '+e.message,'err');}
   return _adminBpData;
 }
@@ -350,14 +347,13 @@ async function _adminBpLoad(){
 async function bpSearch(){
   const data=await _adminBpLoad();
   const q=(document.getElementById('bpSearchInput')?.value||'').trim().toLowerCase();
-  const cat=document.getElementById('bpCatFilter')?.value||'';
   const el=document.getElementById('bpSearchResults');
   if(!el)return;
-  if(!q&&!cat){el.style.display='none';el.innerHTML='';return;}
-  _adminBpFiltered=data.filter(b=>(!q||b.name.toLowerCase().includes(q))&&(!cat||b.category===cat)).slice(0,40);
+  if(!q){el.style.display='none';el.innerHTML='';return;}
+  _adminBpFiltered=data.filter(b=>b.name.toLowerCase().includes(q)).slice(0,40);
   if(!_adminBpFiltered.length){el.style.display='block';el.innerHTML='<div style="padding:10px 14px;color:var(--muted);font-size:0.82rem;">Nenhum resultado.</div>';return;}
   el.style.display='block';
-  el.innerHTML=_adminBpFiltered.map((b,i)=>`<div class="bp-result-item" onclick="bpSelect(${i})"><div style="font-size:0.88rem;font-weight:600;color:var(--text);">${esc(b.name)}</div>${b.category?`<div style="font-size:0.72rem;color:var(--muted);margin-top:1px;">${esc(b.category)}</div>`:''}</div>`).join('');
+  el.innerHTML=_adminBpFiltered.map((b,i)=>`<div class="bp-result-item" onclick="bpSelect(${i})"><div style="font-size:0.88rem;font-weight:600;color:var(--text);">${esc(b.name)}</div></div>`).join('');
 }
 
 function bpSelect(i){

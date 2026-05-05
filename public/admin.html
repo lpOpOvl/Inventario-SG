@@ -270,11 +270,8 @@
               <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px;">
                 <div class="ff" style="margin-bottom:4px;">
                   <label>Pesquisar Blueprint</label>
-                  <div style="display:grid;grid-template-columns:1fr 200px;gap:8px;margin-top:6px;">
+                  <div style="margin-top:6px;">
                     <input type="text" id="bpSearchInput" placeholder="Nome do item de crafting..." oninput="bpSearch()" autocomplete="off" style="height:38px;padding:0 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:0.82rem;outline:none;width:100%;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
-                    <select id="bpCatFilter" onchange="bpSearch()" style="height:38px;padding:0 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:0.82rem;outline:none;width:100%;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;">
-                      <option value="">Todas as categorias</option>
-                    </select>
                   </div>
                   <div id="bpSearchResults" class="bp-results" style="display:none;"></div>
                 </div>
