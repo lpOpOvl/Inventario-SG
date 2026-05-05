@@ -152,6 +152,14 @@ function oiIngUpdate(cid,ingIdx,quality){
   });
 }
 
+function oiIngStep(cid,ingIdx,delta){
+  const sl=document.getElementById('ois-'+cid+'-'+ingIdx);
+  if(!sl)return;
+  const v=Math.max(500,Math.min(1000,+sl.value+delta));
+  sl.value=v;
+  oiIngUpdate(cid,ingIdx,v);
+}
+
 function renderObjItemsList(){
   const objs=objItemsCache||[];
   const el=document.getElementById('objitemsContainer');
@@ -232,9 +240,11 @@ function renderObjItemsList(){
       if(!ing.modifiers.length)return'';
       return`<div class="oi-ing-row">
         <span class="oi-ing-name" title="${esc(ing.name)}">${esc(ing.name)}</span>
-        <span class="oi-ing-qty">${ing.isItem?ing.quantity+'×':ing.quantity+' SCU'}</span>
+        <span class="oi-ing-qty">${ing.isItem?ing.quantity+'×':ing.quantity}</span>
         <input type="range" class="oi-slider" id="ois-${cid}-${ingIdx}" min="500" max="1000" step="1" value="500" style="--pct:0%" oninput="oiIngUpdate(${cid},${ingIdx},+this.value)">
+        <button class="oi-step" onclick="oiIngStep(${cid},${ingIdx},-1)">−</button>
         <span class="oi-qv" id="oiq-${cid}-${ingIdx}">500</span>
+        <button class="oi-step" onclick="oiIngStep(${cid},${ingIdx},+1)">+</button>
       </div>`;
     }).join('');
 
