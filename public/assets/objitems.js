@@ -27,7 +27,13 @@ async function _loadBp(){
       if(!name)return;
       const ings=(bp.slots||[]).map(slot=>{
         const opt=slot.options&&slot.options[0];
-        if(!opt||opt.type!=='resource'||!opt.resourceName)return null;
+        if(!opt)return null;
+        const isItem=opt.type==='item';
+        const isResource=opt.type==='resource';
+        if(!isItem&&!isResource)return null;
+        const resName=isResource?(opt.resourceName||''):(opt.entityName||'');
+        if(!resName)return null;
+        const qty=isItem?(opt.quantity||1):(slot.requiredCount||1);
         // Group raw modifier entries by property (piecewise segments)
         const propSegs={};
         (opt.modifiers||[]).forEach(m=>{
@@ -39,7 +45,7 @@ async function _loadBp(){
         const mods=Object.entries(propSegs)
           .map(([property,segs])=>({property,segs:segs.sort((a,b)=>a.sq-b.sq)}))
           .filter(mod=>Math.abs(_oiPieceEval(mod.segs,1000)-_oiPieceEval(mod.segs,500))>0.0005);
-        return{name:opt.resourceName,quantity:slot.requiredCount||1,modifiers:mods};
+        return{name:resName,quantity:qty,modifiers:mods};
       }).filter(Boolean);
       _bpMap[name.toLowerCase()]={name,category:bp.categoryName||'',ingredients:ings};
     });
@@ -67,14 +73,13 @@ function _oiPieceEval(segs,quality){
 
 function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(mod){return _oiCalc(mod,500);}
-// Always show absolute delta (any change from Q=500 is a benefit, sign depends on stat direction)
 function _fmtDelta(mod,quality){
-  const pct=Math.abs((_oiCalc(mod,quality)-_oiBase(mod))*100);
-  return'+'+pct.toFixed(1)+'%';
+  const pct=(_oiCalc(mod,quality)-_oiBase(mod))*100;
+  return(pct>=0?'+':'')+pct.toFixed(1)+'%';
 }
 function _deltaCls(mod,quality){
-  const d=Math.abs(_oiCalc(mod,quality)-_oiBase(mod));
-  return d>0.0005?'pos':'neu';
+  const d=_oiCalc(mod,quality)-_oiBase(mod);
+  return d>0.0005?'pos':d<-0.0005?'neg':'neu';
 }
 
 function oiSliderUpdate(cid,ii,quality){
@@ -97,7 +102,7 @@ function _oiRebuildSummary(cid){
     const q=sl?+sl.value:500;
     (ing.modifiers||[]).forEach(mod=>{
       const p=mod.property||'Modifier';
-      const delta=Math.abs((_oiCalc(mod,q)-_oiBase(mod))*100);
+      const delta=(_oiCalc(mod,q)-_oiBase(mod))*100;
       totals[p]=(totals[p]||0)+delta;
     });
   });
@@ -106,8 +111,8 @@ function _oiRebuildSummary(cid){
   if(!props.length){el.style.display='none';return;}
   el.style.display='';
   el.innerHTML='<div class="oi-sum-label">Total combinado</div>'+props.map(p=>{
-    const v=totals[p];const cls=v>0.01?'pos':'neu';
-    return`<div class="oi-sum-row"><span class="oi-sum-prop">${esc(p)}</span><span class="oi-sum-val oi-mod-val ${cls}">+${v.toFixed(1)}%</span></div>`;
+    const v=totals[p];const cls=v>0.01?'pos':v<-0.01?'neg':'neu';
+    return`<div class="oi-sum-row"><span class="oi-sum-prop">${esc(p)}</span><span class="oi-sum-val oi-mod-val ${cls}">${(v>=0?'+':'')+v.toFixed(1)+'%'}</span></div>`;
   }).join('');
 }
 
