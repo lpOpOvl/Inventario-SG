@@ -45,7 +45,7 @@ async function renderObjItems(){
 function setObjItemCat(cat){objItemsActiveCat=cat;renderObjItemsList();}
 
 function _oiCalc(mod,quality){
-  const q=Math.min(1000,Math.max(500,+quality));
+  const q=Math.min(1000,Math.max(0,+quality));
   return mod.modifierAtStart+(mod.modifierAtEnd-mod.modifierAtStart)*(q/1000);
 }
 function _fmtMod(val){
@@ -62,7 +62,7 @@ function oiSliderUpdate(cid,ii,quality){
     el.className='oi-mod-val '+(v>1.001?'pos':v<0.999?'neg':'neu');
   });
   const qEl=document.getElementById('oiq-'+cid+'-'+ii);if(qEl)qEl.textContent=quality;
-  const sl=document.getElementById('ois-'+cid+'-'+ii);if(sl)sl.style.setProperty('--pct',((+quality-500)/500*100)+'%');
+  const sl=document.getElementById('ois-'+cid+'-'+ii);if(sl)sl.style.setProperty('--pct',(+quality/1000*100)+'%');
 }
 
 function renderObjItemsList(){
@@ -121,7 +121,7 @@ function renderObjItemsList(){
     const ings=_oiData[cid];
 
     const ingHtml=ings.length?`<div class="oi-ingredients">${ings.map((ing,ii)=>{
-      const defQ=900;const pct=((defQ-500)/500*100);
+      const defQ=500;const pct=(defQ/1000*100);
       const modsHtml=ing.modifiers.length?ing.modifiers.map((mod,mi)=>{const v=_oiCalc(mod,defQ);const cls=v>1.001?'pos':v<0.999?'neg':'neu';return`<div class="oi-mod-row"><span class="oi-mod-prop">${esc(mod.property||'Modifier')}</span><span class="oi-mod-val ${cls}" id="oiv-${cid}-${ii}-${mi}">${_fmtMod(v)}</span></div>`;}).join(''):'';
       return`<div class="oi-ingredient">
         <div class="oi-ing-top">
@@ -129,8 +129,8 @@ function renderObjItemsList(){
           ${modsHtml?`<div class="oi-mods">${modsHtml}</div>`:''}
         </div>
         <div class="oi-slider-row">
-          <span class="oi-slider-lbl">500</span>
-          <input type="range" class="oi-slider" id="ois-${cid}-${ii}" min="500" max="1000" step="1" value="${defQ}" style="--pct:${pct}%" oninput="oiSliderUpdate(${cid},${ii},+this.value)">
+          <span class="oi-slider-lbl">0</span>
+          <input type="range" class="oi-slider" id="ois-${cid}-${ii}" min="0" max="1000" step="1" value="${defQ}" style="--pct:${pct}%" oninput="oiSliderUpdate(${cid},${ii},+this.value)">
           <span class="oi-slider-lbl">1000</span>
           <span class="oi-slider-qval" id="oiq-${cid}-${ii}">${defQ}</span>
         </div>
