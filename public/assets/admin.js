@@ -322,6 +322,92 @@ async function adminMoveObjItem(i,dir){const objs=[...objItemsCache];const ni=i+
 async function adminAddObjItem(){const item=document.getElementById('newObjItemName').value.trim();const category=document.getElementById('newObjItemCat').value;const note=document.getElementById('newObjItemNote').value.trim();const qtyRaw=document.getElementById('newObjItemQty').value;let target_qty=null;if(qtyRaw!==''&&qtyRaw!==null){const v=parseFloat(qtyRaw);if(!isNaN(v)&&v>0)target_qty=v;}if(!item)return toast('Escreve o nome do item.','err');try{const r=await fetch('/api/objectives_items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item,note,category,target_qty})});if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}document.getElementById('newObjItemName').value='';document.getElementById('newObjItemNote').value='';document.getElementById('newObjItemQty').value='';renderAdminObjItems();toast(`"${item}" adicionado aos objetivos.`,'ok');}catch{toast('Erro ao adicionar.','err');}}
 async function adminDelObjItem(i){const obj=objItemsCache[i];if(!obj)return;try{await fetch(`/api/objectives_items?id=${obj.id}`,{method:'DELETE'});renderAdminObjItems();toast(`"${obj.item}" removido.`,'ok');}catch{toast('Erro ao remover.','err');}}
 
+// ── BLUEPRINT SEARCH ──────────────────────────────────────────────────────
+let _adminBpData=null;let _adminBpFiltered=[];let _adminBpSel=null;
+
+async function _adminBpLoad(){
+  if(_adminBpData)return _adminBpData;
+  try{
+    const r=await fetch('/ptblueprints.json');
+    const raw=await r.json();
+    const arr=Array.isArray(raw)?raw:Object.values(raw);
+    _adminBpData=arr.map(bp=>({
+      name:bp.name||bp.itemName||bp.item||'',
+      category:bp.category||bp.type||bp.subcategory||'',
+      ingredients:(bp.ingredients||bp.materials||bp.resources||[]).map(ing=>({
+        name:ing.name||ing.material||ing.ore||'',
+        quantity:ing.quantity||ing.qty||1,
+        modifierAtStart:ing.modifierAtStart??1,
+        modifierAtEnd:ing.modifierAtEnd??1
+      })).filter(ing=>ing.name)
+    })).filter(bp=>bp.name);
+    const cats=[...new Set(_adminBpData.map(b=>b.category).filter(Boolean))].sort();
+    const sel=document.getElementById('bpCatFilter');
+    if(sel)sel.innerHTML='<option value="">Todas as categorias</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  }catch{_adminBpData=[];toast('Erro ao carregar blueprints.','err');}
+  return _adminBpData;
+}
+
+async function bpSearch(){
+  const data=await _adminBpLoad();
+  const q=(document.getElementById('bpSearchInput')?.value||'').trim().toLowerCase();
+  const cat=document.getElementById('bpCatFilter')?.value||'';
+  const el=document.getElementById('bpSearchResults');
+  if(!el)return;
+  if(!q&&!cat){el.style.display='none';el.innerHTML='';return;}
+  _adminBpFiltered=data.filter(b=>(!q||b.name.toLowerCase().includes(q))&&(!cat||b.category===cat)).slice(0,40);
+  if(!_adminBpFiltered.length){el.style.display='block';el.innerHTML='<div style="padding:10px 14px;color:var(--muted);font-size:0.82rem;">Nenhum resultado.</div>';return;}
+  el.style.display='block';
+  el.innerHTML=_adminBpFiltered.map((b,i)=>`<div class="bp-result-item" onclick="bpSelect(${i})"><div style="font-size:0.88rem;font-weight:600;color:var(--text);">${esc(b.name)}</div>${b.category?`<div style="font-size:0.72rem;color:var(--muted);margin-top:1px;">${esc(b.category)}</div>`:''}</div>`).join('');
+}
+
+function bpSelect(i){
+  _adminBpSel=_adminBpFiltered[i];if(!_adminBpSel)return;
+  const inp=document.getElementById('bpSearchInput');if(inp)inp.value=_adminBpSel.name;
+  document.getElementById('bpSearchResults').style.display='none';
+  _bpRenderPreview();
+}
+
+function _bpRenderPreview(){
+  const prev=document.getElementById('bpPreview');if(!prev||!_adminBpSel)return;
+  const bp=_adminBpSel;
+  const SS='height:38px;padding:0 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:Inter,sans-serif;font-size:0.82rem;outline:none;width:100%;';
+  const ingsHtml=bp.ingredients.length?bp.ingredients.map(ing=>`<div class="bp-ing-row"><div style="flex:1;font-size:0.88rem;color:var(--text2);">${esc(ing.name)}</div><span style="font-size:0.78rem;color:var(--muted);">×${ing.quantity}</span><span style="font-size:0.7rem;color:var(--muted2);margin-left:8px;">${ing.modifierAtStart}→${ing.modifierAtEnd}</span></div>`).join(''):'<div style="font-size:0.82rem;color:var(--muted);">Sem ingredientes.</div>';
+  prev.style.display='block';
+  prev.innerHTML=`<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;"><div><div style="font-size:1rem;font-weight:700;color:var(--text);">${esc(bp.name)}</div>${bp.category?`<div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${esc(bp.category)}</div>`:''}</div><button class="btn btn-ghost btn-sm" onclick="bpClearSel()">Limpar</button></div><div style="margin-bottom:12px;"><div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Ingredientes</div>${ingsHtml}</div><div style="display:flex;gap:8px;align-items:flex-end;"><div class="ff" style="flex:1;"><label>Subcategoria do Item</label><select id="bpItemCat" style="${SS}"><option value="Armas (FPS)">Armas (FPS)</option><option value="Armadura (FPS)">Armadura (FPS)</option><option value="Armas (Veículo)">Armas (Veículo)</option><option value="Componentes (Veículo)">Componentes (Veículo)</option><option value="Componentes (Mining)">Componentes (Mining)</option></select></div><button class="btn btn-success btn-sm" onclick="bpConfirmAdd()" style="height:38px;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar</button></div>`;
+}
+
+function bpClearSel(){
+  _adminBpSel=null;
+  const inp=document.getElementById('bpSearchInput');if(inp)inp.value='';
+  const el=document.getElementById('bpSearchResults');if(el){el.style.display='none';el.innerHTML='';}
+  const prev=document.getElementById('bpPreview');if(prev)prev.style.display='none';
+}
+
+async function bpConfirmAdd(){
+  if(!_adminBpSel)return;
+  const bp=_adminBpSel;
+  const category=document.getElementById('bpItemCat')?.value||'Armas (FPS)';
+  try{
+    const r=await fetch('/api/objectives_items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:bp.name,note:'',category,target_qty:null})});
+    if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}
+    toast(`"${bp.name}" adicionado.`,'ok');
+  }catch{return toast('Erro ao adicionar item.','err');}
+  if(bp.ingredients.length){
+    try{
+      const objR=await fetch('/api/objectives');const objD=await objR.json();
+      const existing=new Set((objD.objectives||[]).map(o=>o.item));
+      for(const ing of bp.ingredients){
+        if(ing.name&&!existing.has(ing.name)){
+          await fetch('/api/objectives',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item:ing.name,note:'Mineração',category:'Componentes de Mineração',target_qty:null})});
+        }
+      }
+    }catch{}
+  }
+  bpClearSel();
+  renderAdminObjItems();
+}
+
 // ── REGRAS ────────────────────────────────────────────────────────────────
 let rulesCache=[];
 let ruleDragSrcIdx=null;
