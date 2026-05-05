@@ -330,21 +330,20 @@ async function _adminBpLoad(){
   try{
     const r=await fetch('/ptblueprints.json');
     const raw=await r.json();
-    const arr=Array.isArray(raw)?raw:Object.values(raw);
-    _adminBpData=arr.map(bp=>({
-      name:bp.name||bp.itemName||bp.item||'',
-      category:bp.category||bp.type||bp.subcategory||'',
-      ingredients:(bp.ingredients||bp.materials||bp.resources||[]).map(ing=>({
-        name:ing.name||ing.material||ing.ore||'',
-        quantity:ing.quantity||ing.qty||1,
-        modifierAtStart:ing.modifierAtStart??1,
-        modifierAtEnd:ing.modifierAtEnd??1
-      })).filter(ing=>ing.name)
-    })).filter(bp=>bp.name);
+    const arr=raw.blueprints||(Array.isArray(raw)?raw:[]);
+    _adminBpData=arr.map(bp=>{
+      const ings=(bp.slots||[]).map(slot=>{
+        const opt=slot.options&&slot.options[0];
+        if(!opt||opt.type!=='resource'||!opt.resourceName)return null;
+        const mod=opt.modifiers&&opt.modifiers[0];
+        return{name:opt.resourceName,quantity:slot.requiredCount||1,modifierAtStart:mod?(mod.modifierAtStart??1):1,modifierAtEnd:mod?(mod.modifierAtEnd??1):1};
+      }).filter(Boolean);
+      return{name:bp.blueprintName||'',category:bp.categoryName||'',ingredients:ings};
+    }).filter(bp=>bp.name);
     const cats=[...new Set(_adminBpData.map(b=>b.category).filter(Boolean))].sort();
     const sel=document.getElementById('bpCatFilter');
     if(sel)sel.innerHTML='<option value="">Todas as categorias</option>'+cats.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
-  }catch{_adminBpData=[];toast('Erro ao carregar blueprints.','err');}
+  }catch(e){_adminBpData=[];toast('Erro ao carregar blueprints: '+e.message,'err');}
   return _adminBpData;
 }
 

@@ -15,17 +15,17 @@ async function _loadBp(){
   try{
     const r=await fetch('/ptblueprints.json');
     const raw=await r.json();
-    const arr=Array.isArray(raw)?raw:Object.values(raw);
+    const arr=raw.blueprints||(Array.isArray(raw)?raw:[]);
     arr.forEach(bp=>{
-      const name=bp.name||bp.itemName||bp.item||'';
+      const name=bp.blueprintName||'';
       if(!name)return;
-      const ings=(bp.ingredients||bp.materials||bp.resources||[]).map(ing=>({
-        name:ing.name||ing.material||ing.ore||'',
-        quantity:ing.quantity||ing.qty||1,
-        modifierAtStart:ing.modifierAtStart??1,
-        modifierAtEnd:ing.modifierAtEnd??1
-      })).filter(ing=>ing.name);
-      _bpMap[name.toLowerCase()]={name,category:bp.category||bp.type||'',ingredients:ings};
+      const ings=(bp.slots||[]).map(slot=>{
+        const opt=slot.options&&slot.options[0];
+        if(!opt||opt.type!=='resource'||!opt.resourceName)return null;
+        const mod=opt.modifiers&&opt.modifiers[0];
+        return{name:opt.resourceName,quantity:slot.requiredCount||1,modifierAtStart:mod?(mod.modifierAtStart??1):1,modifierAtEnd:mod?(mod.modifierAtEnd??1):1};
+      }).filter(Boolean);
+      _bpMap[name.toLowerCase()]={name,category:bp.categoryName||'',ingredients:ings};
     });
   }catch{}
 }
