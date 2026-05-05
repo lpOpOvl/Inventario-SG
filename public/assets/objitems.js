@@ -48,18 +48,23 @@ function _oiCalc(mod,quality){
   const q=Math.min(1000,Math.max(0,+quality));
   return mod.modifierAtStart+(mod.modifierAtEnd-mod.modifierAtStart)*(q/1000);
 }
-function _fmtMod(val){
-  const pct=(val-1)*100;
+function _fmtDelta(mod,quality){
+  const val=_oiCalc(mod,quality);
+  const base=_oiCalc(mod,500);
+  const pct=(val-base)*100;
   return(pct>=0?'+':'')+pct.toFixed(1)+'%';
+}
+function _deltaCls(mod,quality){
+  const d=_oiCalc(mod,quality)-_oiCalc(mod,500);
+  return d>0.001?'pos':d<-0.001?'neg':'neu';
 }
 
 function oiSliderUpdate(cid,ii,quality){
   const ings=_oiData[cid];if(!ings||!ings[ii])return;
   (ings[ii].modifiers||[]).forEach((mod,mi)=>{
     const el=document.getElementById('oiv-'+cid+'-'+ii+'-'+mi);if(!el)return;
-    const v=_oiCalc(mod,quality);
-    el.textContent=_fmtMod(v);
-    el.className='oi-mod-val '+(v>1.001?'pos':v<0.999?'neg':'neu');
+    el.textContent=_fmtDelta(mod,quality);
+    el.className='oi-mod-val '+_deltaCls(mod,quality);
   });
   const qEl=document.getElementById('oiq-'+cid+'-'+ii);if(qEl)qEl.textContent=quality;
   const sl=document.getElementById('ois-'+cid+'-'+ii);if(sl)sl.style.setProperty('--pct',(+quality/1000*100)+'%');
@@ -122,7 +127,7 @@ function renderObjItemsList(){
 
     const ingHtml=ings.length?`<div class="oi-ingredients">${ings.map((ing,ii)=>{
       const defQ=500;const pct=(defQ/1000*100);
-      const modsHtml=ing.modifiers.length?ing.modifiers.map((mod,mi)=>{const v=_oiCalc(mod,defQ);const cls=v>1.001?'pos':v<0.999?'neg':'neu';return`<div class="oi-mod-row"><span class="oi-mod-prop">${esc(mod.property||'Modifier')}</span><span class="oi-mod-val ${cls}" id="oiv-${cid}-${ii}-${mi}">${_fmtMod(v)}</span></div>`;}).join(''):'';
+      const modsHtml=ing.modifiers.length?ing.modifiers.map((mod,mi)=>`<div class="oi-mod-row"><span class="oi-mod-prop">${esc(mod.property||'Modifier')}</span><span class="oi-mod-val ${_deltaCls(mod,defQ)}" id="oiv-${cid}-${ii}-${mi}">${_fmtDelta(mod,defQ)}</span></div>`).join(''):'';
       return`<div class="oi-ingredient">
         <div class="oi-ing-top">
           <span class="oi-ing-name">${esc(ing.name)}<span class="oi-qty-badge">×${ing.quantity}</span></span>
