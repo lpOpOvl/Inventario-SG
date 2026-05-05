@@ -28,7 +28,7 @@ async function _loadBp(){
       const ings=(bp.slots||[]).map(slot=>{
         const opt=slot.options&&slot.options[0];
         if(!opt||opt.type!=='resource'||!opt.resourceName)return null;
-        const mods=(opt.modifiers||[]).map(m=>({property:_fmtProp(m.gameplayProperty||''),modifierAtStart:m.modifierAtStart??1,modifierAtEnd:m.modifierAtEnd??1}));
+        const mods=(opt.modifiers||[]).map(m=>({property:_fmtProp(m.gameplayProperty||''),modifierAtStart:m.modifierAtStart??1,modifierAtEnd:m.modifierAtEnd??1,startQuality:m.startQuality??0,endQuality:m.endQuality??1000}));
         return{name:opt.resourceName,quantity:slot.requiredCount||1,modifiers:mods};
       }).filter(Boolean);
       _bpMap[name.toLowerCase()]={name,category:bp.categoryName||'',ingredients:ings};
@@ -46,16 +46,19 @@ function setObjItemCat(cat){objItemsActiveCat=cat;renderObjItemsList();}
 
 function _oiCalc(mod,quality){
   const q=Math.min(1000,Math.max(500,+quality));
-  return mod.modifierAtStart+(mod.modifierAtEnd-mod.modifierAtStart)*(q/1000);
+  const sq=mod.startQuality??0;
+  const eq=mod.endQuality??1000;
+  if(eq<=sq)return mod.modifierAtStart;
+  const t=Math.max(0,Math.min(1,(q-sq)/(eq-sq)));
+  return mod.modifierAtStart+(mod.modifierAtEnd-mod.modifierAtStart)*t;
 }
+function _oiBase(mod){return _oiCalc(mod,500);}
 function _fmtDelta(mod,quality){
-  const val=_oiCalc(mod,quality);
-  const base=_oiCalc(mod,500);
-  const pct=(val-base)*100;
+  const pct=(_oiCalc(mod,quality)-_oiBase(mod))*100;
   return(pct>=0?'+':'')+pct.toFixed(1)+'%';
 }
 function _deltaCls(mod,quality){
-  const d=_oiCalc(mod,quality)-_oiCalc(mod,500);
+  const d=_oiCalc(mod,quality)-_oiBase(mod);
   return d>0.001?'pos':d<-0.001?'neg':'neu';
 }
 
@@ -79,7 +82,7 @@ function _oiRebuildSummary(cid){
     const q=sl?+sl.value:500;
     (ing.modifiers||[]).forEach(mod=>{
       const p=mod.property||'Modifier';
-      const delta=(_oiCalc(mod,q)-_oiCalc(mod,500))*100;
+      const delta=(_oiCalc(mod,q)-_oiBase(mod))*100;
       totals[p]=(totals[p]||0)+delta;
     });
   });
