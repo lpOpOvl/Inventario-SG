@@ -14,8 +14,7 @@ function _fmtProp(p){
   if(!p)return'';
   const part=p.includes('_')?p.split('_').slice(1).join(' '):p;
   let s=part.replace(/([a-z])([A-Z])/g,'$1 $2');
-  // split compound lowercase SC property names (e.g. temperaturemax, maxhealth)
-  const sfx='max|min|health|regen|rate|range|speed|power|time|cooldown|damage|charge|resistance|capacity|generation|temperature|requirement|level|count|shield|armor';
+  const sfx='max|min|health|regen|rate|range|speed|power|time|cooldown|damage|charge|resistance|capacity|generation|temperature|requirement|level|count|shield|armor|mitigation|reduction|multiplier|penalty|bonus';
   s=s.replace(new RegExp('([a-z])('+sfx+')(?=[^a-z]|$)','gi'),'$1 $2');
   s=s.replace(/\b(max|min)([a-z])/gi,'$1 $2');
   return s.replace(/\b\w/g,c=>c.toUpperCase()).replace(/\s+/g,' ').trim();
@@ -77,9 +76,7 @@ function _oiPieceEval(segs,quality){
 function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(mod){return _oiCalc(mod,500);}
 
-// Flip sign in display: lower modifier = better, show as positive
 const _FLIP=new Set(['recoil smoothness','recoil handling','fuelrequirement','fuel requirement']);
-// Keep sign negative but color green (negative = improvement)
 const _NEG_GOOD=new Set(['recoil kick']);
 
 function _dispVal(prop,rawPct){
@@ -93,19 +90,16 @@ function _effVal(prop,rawPct){
 function _valCls(eff){return eff>0.01?'pos':eff<-0.01?'neg':'neu';}
 function _propKey(prop){return prop.toLowerCase().replace(/[^a-z0-9]/g,'-');}
 
-// Per-ingredient quality update
 function oiIngUpdate(cid,ingIdx,quality){
   if(!_oiQuality[cid])_oiQuality[cid]={};
   _oiQuality[cid][ingIdx]=+quality;
 
-  // Update this ingredient's slider fill and value label
   const pct=((+quality-500)/500*100);
   const sl=document.getElementById('ois-'+cid+'-'+ingIdx);
   if(sl)sl.style.setProperty('--pct',pct+'%');
   const qEl=document.getElementById('oiq-'+cid+'-'+ingIdx);
   if(qEl)qEl.textContent=quality;
 
-  // Recompute aggregate totals across all ingredients at their respective qualities
   const ings=_oiData[cid]||[];
   const totals={};
   ings.forEach((ing,idx)=>{
@@ -117,7 +111,11 @@ function oiIngUpdate(cid,ingIdx,quality){
     });
   });
 
-  // Update aggregate stat display
+  // Average quality pct across all active ingredients (for bar fill)
+  const qVals=Object.values(_oiQuality[cid]||{});
+  const avgQ=qVals.length?qVals.reduce((a,b)=>a+b,0)/qVals.length:500;
+  const avgPct=(avgQ-500)/500*100;
+
   Object.entries(totals).forEach(([prop,rawVal])=>{
     const key=_propKey(prop);
     const disp=_dispVal(prop,rawVal);
@@ -125,6 +123,8 @@ function oiIngUpdate(cid,ingIdx,quality){
     const cls=_valCls(eff);
     const valEl=document.getElementById('oiv-'+cid+'-'+key);
     if(valEl){valEl.textContent=(disp>=0?'+':'')+disp.toFixed(1)+'%';valEl.className='oi-stat-val '+cls;}
+    const fillEl=document.getElementById('oib-'+cid+'-'+key);
+    if(fillEl){fillEl.style.width=avgPct+'%';fillEl.className='oi-bar-f '+cls;}
   });
 }
 
@@ -184,7 +184,6 @@ function renderObjItemsList(){
     _oiData[cid]=bp?bp.ingredients:[];
     const ings=_oiData[cid];
 
-    // Collect unique properties across all ingredients that have quality-dependent mods
     const propSet=[];const seen=new Set();
     ings.forEach(ing=>ing.modifiers.forEach(mod=>{
       const p=mod.property||'';if(!p||seen.has(p))return;
@@ -192,24 +191,25 @@ function renderObjItemsList(){
     }));
     const hasMods=propSet.length>0;
 
-    // Aggregate stat rows (text only)
+    // Stat rows with bar
     const statRows=propSet.map(prop=>{
       const key=_propKey(prop);
-      return`<div class="oi-stat-row">
-        <span class="oi-stat-lbl">${esc(prop)}</span>
-        <span class="oi-stat-val neu" id="oiv-${cid}-${key}">+0.0%</span>
+      return`<div class="oi-stat">
+        <div class="oi-stat-row">
+          <span class="oi-stat-lbl">${esc(prop)}</span>
+          <span class="oi-stat-val neu" id="oiv-${cid}-${key}">+0.0%</span>
+        </div>
+        <div class="oi-bar"><div class="oi-bar-f neu" id="oib-${cid}-${key}" style="width:0%"></div></div>
       </div>`;
     }).join('');
 
-    // Per-ingredient sliders (only for ingredients with quality-dependent mods)
+    // Per-ingredient sliders — without 500/1000 labels to avoid overflow
     const ingSliders=ings.map((ing,ingIdx)=>{
       if(!ing.modifiers.length)return'';
       return`<div class="oi-ing-row">
         <span class="oi-ing-name" title="${esc(ing.name)}">${esc(ing.name)}</span>
         <span class="oi-ing-qty">${ing.quantity}×</span>
-        <span class="oi-ql">500</span>
         <input type="range" class="oi-slider" id="ois-${cid}-${ingIdx}" min="500" max="1000" step="1" value="500" style="--pct:0%" oninput="oiIngUpdate(${cid},${ingIdx},+this.value)">
-        <span class="oi-ql">1000</span>
         <span class="oi-qv" id="oiq-${cid}-${ingIdx}">500</span>
       </div>`;
     }).join('');
