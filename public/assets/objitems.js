@@ -73,16 +73,21 @@ function _oiPieceEval(segs,quality){
 
 function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(mod){return _oiCalc(mod,500);}
-// Properties where lower modifier = better player experience → show improvement as positive
-const _INVERTED=new Set(['recoil smoothness','recoil handling','recoil kick','fuelrequirement']);
-function _sign(mod){return _INVERTED.has((mod.property||'').toLowerCase())?-1:1;}
+// Flip sign in display: lower modifier = better, show as positive (e.g. Smoothness, Handling)
+const _FLIP=new Set(['recoil smoothness','recoil handling','fuelrequirement']);
+// Keep sign but color as positive: negative value = improvement (e.g. Recoil Kick)
+const _NEG_GOOD=new Set(['recoil kick']);
 function _fmtDelta(mod,quality){
-  const pct=(_oiCalc(mod,quality)-_oiBase(mod))*_sign(mod)*100;
+  const raw=(_oiCalc(mod,quality)-_oiBase(mod))*100;
+  const p=(mod.property||'').toLowerCase();
+  const pct=_FLIP.has(p)?-raw:raw;
   return(pct>=0?'+':'')+pct.toFixed(1)+'%';
 }
 function _deltaCls(mod,quality){
-  const d=(_oiCalc(mod,quality)-_oiBase(mod))*_sign(mod);
-  return d>0.0005?'pos':d<-0.0005?'neg':'neu';
+  const raw=_oiCalc(mod,quality)-_oiBase(mod);
+  const p=(mod.property||'').toLowerCase();
+  const eff=_FLIP.has(p)?-raw:_NEG_GOOD.has(p)?-raw:raw;
+  return eff>0.0005?'pos':eff<-0.0005?'neg':'neu';
 }
 
 function oiSliderUpdate(cid,ii,quality){
@@ -105,7 +110,7 @@ function _oiRebuildSummary(cid){
     const q=sl?+sl.value:500;
     (ing.modifiers||[]).forEach(mod=>{
       const p=mod.property||'Modifier';
-      const delta=(_oiCalc(mod,q)-_oiBase(mod))*_sign(mod)*100;
+      const delta=(_oiCalc(mod,q)-_oiBase(mod))*100;
       totals[p]=(totals[p]||0)+delta;
     });
   });
@@ -114,8 +119,12 @@ function _oiRebuildSummary(cid){
   if(!props.length){el.style.display='none';return;}
   el.style.display='';
   el.innerHTML='<div class="oi-sum-label">Total combinado</div>'+props.map(p=>{
-    const v=totals[p];const cls=v>0.01?'pos':v<-0.01?'neg':'neu';
-    return`<div class="oi-sum-row"><span class="oi-sum-prop">${esc(p)}</span><span class="oi-sum-val oi-mod-val ${cls}">${(v>=0?'+':'')+v.toFixed(1)+'%'}</span></div>`;
+    const v=totals[p];
+    const pk=p.toLowerCase();
+    const eff=_FLIP.has(pk)?-v:_NEG_GOOD.has(pk)?-v:v;
+    const cls=eff>0.01?'pos':eff<-0.01?'neg':'neu';
+    const disp=_FLIP.has(pk)?-v:v;
+    return`<div class="oi-sum-row"><span class="oi-sum-prop">${esc(p)}</span><span class="oi-sum-val oi-mod-val ${cls}">${(disp>=0?'+':'')+disp.toFixed(1)+'%'}</span></div>`;
   }).join('');
 }
 
