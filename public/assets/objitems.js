@@ -10,11 +10,19 @@ document.addEventListener('DOMContentLoaded',async()=>{
   await renderObjItems();
 });
 
+// Generic prefixes that add no display value — strip them
+const _NOISY_PFX=new Set(['weapon','vehicleweapon','vehicleitem','vehicle','health','item','fpsgear','fps']);
+
 function _fmtProp(p){
   if(!p)return'';
-  const part=p.includes('_')?p.split('_').slice(1).join(' '):p;
-  let s=part.replace(/([a-z])([A-Z])/g,'$1 $2');
-  const sfx='max|min|health|regen|rate|range|speed|power|time|cooldown|damage|charge|resistance|capacity|generation|temperature|requirement|level|count|shield|armor|mitigation|reduction|multiplier|penalty|bonus';
+  let s=p;
+  if(p.includes('_')){
+    const parts=p.split('_');
+    const skip=parts.length>1&&_NOISY_PFX.has(parts[0].toLowerCase())?1:0;
+    s=parts.slice(skip).join(' ');
+  }
+  s=s.replace(/([a-z])([A-Z])/g,'$1 $2');
+  const sfx='max|min|health|regen|rate|range|speed|power|time|cooldown|damage|charge|resistance|capacity|generation|temperature|requirement|level|count|shield|armor|mitigation|reduction|multiplier|penalty|bonus|strength|recharge';
   s=s.replace(new RegExp('([a-z])('+sfx+')(?=[^a-z]|$)','gi'),'$1 $2');
   s=s.replace(/\b(max|min)([a-z])/gi,'$1 $2');
   return s.replace(/\b\w/g,c=>c.toUpperCase()).replace(/\s+/g,' ').trim();
