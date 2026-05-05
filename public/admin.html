@@ -276,6 +276,29 @@
                   <div id="bpSearchResults" class="bp-results" style="display:none;"></div>
                 </div>
                 <div id="bpPreview" class="bp-preview" style="display:none;"></div>
+                <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:12px;">
+                  <div style="font-size:0.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Adicionar manualmente</div>
+                  <div style="display:grid;grid-template-columns:1fr 180px auto;gap:8px;align-items:end;">
+                    <div class="ff">
+                      <label>Nome do Item</label>
+                      <input type="text" id="manualObjItemName" placeholder="ex: Greycat ROC, KSAR Demeco..." autocomplete="off" style="height:38px;padding:0 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:0.82rem;outline:none;width:100%;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'" onkeydown="if(event.key==='Enter')adminAddObjItemManual()">
+                    </div>
+                    <div class="ff">
+                      <label>Subcategoria</label>
+                      <select id="manualObjItemCat" style="height:38px;padding:0 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:0.82rem;outline:none;width:100%;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;">
+                        <option value="Armas (FPS)">Armas (FPS)</option>
+                        <option value="Armadura (FPS)">Armadura (FPS)</option>
+                        <option value="Armas (Veículo)">Armas (Veículo)</option>
+                        <option value="Componentes (Veículo)">Componentes (Veículo)</option>
+                        <option value="Componentes (Mining)">Componentes (Mining)</option>
+                      </select>
+                    </div>
+                    <button class="btn btn-success btn-sm" onclick="adminAddObjItemManual()" style="height:38px;">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Adicionar
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

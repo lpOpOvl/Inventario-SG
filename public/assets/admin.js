@@ -322,6 +322,18 @@ async function adminMoveObjItem(i,dir){const objs=[...objItemsCache];const ni=i+
 async function adminAddObjItem(){const item=document.getElementById('newObjItemName').value.trim();const category=document.getElementById('newObjItemCat').value;const note=document.getElementById('newObjItemNote').value.trim();const qtyRaw=document.getElementById('newObjItemQty').value;let target_qty=null;if(qtyRaw!==''&&qtyRaw!==null){const v=parseFloat(qtyRaw);if(!isNaN(v)&&v>0)target_qty=v;}if(!item)return toast('Escreve o nome do item.','err');try{const r=await fetch('/api/objectives_items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item,note,category,target_qty})});if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}document.getElementById('newObjItemName').value='';document.getElementById('newObjItemNote').value='';document.getElementById('newObjItemQty').value='';renderAdminObjItems();toast(`"${item}" adicionado aos objetivos.`,'ok');}catch{toast('Erro ao adicionar.','err');}}
 async function adminDelObjItem(i){const obj=objItemsCache[i];if(!obj)return;try{await fetch(`/api/objectives_items?id=${obj.id}`,{method:'DELETE'});renderAdminObjItems();toast(`"${obj.item}" removido.`,'ok');}catch{toast('Erro ao remover.','err');}}
 
+async function adminAddObjItemManual(){
+  const item=document.getElementById('manualObjItemName')?.value.trim();
+  const category=document.getElementById('manualObjItemCat')?.value||'Armas (FPS)';
+  if(!item)return toast('Escreve o nome do item.','err');
+  try{
+    const r=await fetch('/api/objectives_items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item,note:'',category,target_qty:null})});
+    if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}
+    document.getElementById('manualObjItemName').value='';
+    renderAdminObjItems();toast(`"${item}" adicionado.`,'ok');
+  }catch{toast('Erro ao adicionar.','err');}
+}
+
 // ── BLUEPRINT SEARCH ──────────────────────────────────────────────────────
 let _adminBpData=null;let _adminBpFiltered=[];let _adminBpSel=null;
 
