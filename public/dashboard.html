@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Shadow Guardians — Meu Inventário</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<div class="dash">
+  <aside class="sidebar">
+    <div class="sb-header">
+      <img src="/sg-logo.png" alt="Shadow Guardians" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;">
+      <div><div class="sb-name">Shadow Guardians</div><div class="sb-sub">Inventário de Minérios</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-item active" id="nav-inv" onclick="window.location.href='/dashboard.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/></svg>
+        Meu Inventário
+      </div>
+      <div class="sb-item" id="nav-org" onclick="window.location.href='/org.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Inventário da Org
+      </div>
+      <div class="sb-item" id="nav-obj" onclick="window.location.href='/objetivos.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Objetivos Minérios
+      </div>
+      <div class="sb-item" id="nav-objitems" onclick="window.location.href='/objitems.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        Objetivos Itens
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-item" id="nav-pw" onclick="window.location.href='/dashboard.html?section=pw'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Alterar Password
+      </div>
+      <div class="sb-item" id="nav-hist" onclick="window.location.href='/historico.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Histórico
+      </div>
+      <div class="sb-item" id="nav-rules" onclick="window.location.href='/regras.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Regras
+      </div>
+      <div class="sb-item admin-item" id="nav-admin" onclick="window.location.href='/admin.html'" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Administração
+      </div>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <span style="font-size:0.9rem;color:var(--muted);" id="tbTitle">Meu Inventário</span>
+      <button class="user-btn" onclick="logout()">
+        <div class="user-av" id="uAv">?</div>
+        <span id="uName">—</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      </button>
+    </header>
+
+    <div id="goalBanner">
+      <div class="goal-banner-inner">
+        <div class="goal-banner-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="goal-banner-text">
+          <div class="goal-banner-title" id="goalBannerTitle">Meta atingida!</div>
+          <div class="goal-banner-sep">·</div>
+          <div class="goal-banner-items" id="goalBannerItems"></div>
+        </div>
+        <button class="goal-banner-close" onclick="document.getElementById('goalBanner').classList.remove('show')" title="Fechar">✕</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="content-inner">
+
+        <!-- PASSWORD PAGE -->
+        <div id="pwPage" style="display:none;">
+          <div class="pw-card">
+            <h3>Alterar Password</h3>
+            <div class="lf"><label>Código de Convite</label><input type="text" id="pwC" placeholder="Código da org"></div>
+            <div class="lf"><label>Password Atual</label><input type="password" id="pwA" placeholder="••••••••"></div>
+            <div class="lf"><label>Nova Password</label><input type="password" id="pwN" placeholder="Mínimo 4 caracteres"></div>
+            <div class="lf"><label>Confirmar Nova Password</label><input type="password" id="pwN2" placeholder="Repete a nova password"></div>
+            <button class="btn btn-success btn-sm" onclick="alterarPass()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Guardar</button>
+          </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div id="mainContent">
+          <div class="page-header">
+            <h1 class="page-title" id="pgTitle">Meu Inventário</h1>
+            <p class="page-sub" id="pgSub">Os teus minérios registados</p>
+          </div>
+
+          <div class="stats-row" id="statsRow">
+            <div class="sc" id="sc0"></div>
+            <div class="sc" id="sc1"></div>
+            <div class="sc" id="sc2"></div>
+            <div class="sc" id="sc3"></div>
+          </div>
+
+          <div class="filter-row" id="filterRow" style="grid-template-columns:200px;">
+            <div class="fg">
+              <label>Filtrar por tipo</label>
+              <select id="fType" onchange="renderMine()">
+                <option value="">Todos os tipos</option>
+                <option value="ship">Minério</option>
+                <option value="gem">Gema</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="addBtnRow" style="display:flex;justify-content:flex-end;margin-bottom:12px;gap:8px;align-items:center;">
+            <span style="font-size:0.78rem;color:var(--muted);" id="tblCount"></span>
+            <button class="btn btn-primary btn-sm" onclick="toggleAdd()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Adicionar Item
+            </button>
+          </div>
+
+          <div id="addPanel" style="display:none;">
+            <div class="panel-ttl">Registar Minério</div>
+            <div class="fg2">
+              <div class="ff">
+                <label>Minério</label>
+                <select id="iOre" onchange="updateQR()"></select>
+              </div>
+              <div class="ff">
+                <label id="iQtyLabel">Quantidade (SCUs)</label>
+                <input type="number" id="iQty" placeholder="ex: 32" min="0.001" step="0.001">
+              </div>
+              <div class="ff">
+                <label>Qualidade <span id="qh" class="qhint"></span></label>
+                <input type="number" id="iQual" placeholder="—">
+              </div>
+              <div class="ff s2">
+                <label>Localização</label>
+                <select id="iLoc"><option value="">— Selecionar —</option></select>
+              </div>
+            </div>
+            <div class="form-acts">
+              <button class="btn btn-success btn-sm" onclick="addItem()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Adicionar</button>
+              <button class="btn btn-outline btn-sm" onclick="toggleAdd()">Cancelar</button>
+            </div>
+          </div>
+
+          <div class="tbl-wrap" id="tblWrapInv">
+            <div id="tblContainerInv"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SAÍDA -->
+<div class="modal-ov" id="mSaida" style="display:none;" onclick="if(event.target.id==='mSaida')document.getElementById('mSaida').style.display='none'">
+  <div class="modal-box" style="max-width:420px;">
+    <h3>Dar Saída de Stock</h3>
+    <div class="modal-name" id="mName">—</div>
+    <div class="modal-stock" id="mStock">—</div>
+    <div class="lf" style="margin-top:14px;">
+      <label id="mQtyLabel">Quantidade</label>
+      <input type="number" id="mQty" min="0.001" step="0.001" placeholder="ex: 5">
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <button class="saida-type-btn active" id="stypeCraft" onclick="setSaidaType('craft')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/><path d="M12 8v4l3 3"/></svg>
+        Crafting / Consumo
+      </button>
+      <button class="saida-type-btn" id="stypeTransfer" onclick="setSaidaType('transfer')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Transferir para
+      </button>
+    </div>
+    <div id="mTransferTo" style="display:none;">
+      <div class="ff" style="margin-bottom:8px;">
+        <label>Destinatário</label>
+        <select id="mDestUser"></select>
+      </div>
+    </div>
+    <div class="modal-acts">
+      <button class="btn btn-success btn-sm" onclick="confirmSaida()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Confirmar</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('mSaida').style.display='none'">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL MUDAR LOCALIZAÇÃO -->
+<div class="modal-ov" id="mLoc" style="display:none;" onclick="if(event.target.id==='mLoc')document.getElementById('mLoc').style.display='none'">
+  <div class="modal-box" style="max-width:360px;">
+    <h3>Mudar Localização</h3>
+    <div class="modal-name" id="mLocName">—</div>
+    <input type="hidden" id="mLocId">
+    <div class="lf" style="margin-top:14px;">
+      <label>Localização</label>
+      <select id="mLocSel" style="width:100%;height:38px;padding:0 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;outline:none;"></select>
+    </div>
+    <div class="modal-acts" style="margin-top:16px;">
+      <button class="btn btn-success btn-sm" onclick="confirmChangeLoc()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>Guardar</button>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('mLoc').style.display='none'">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/assets/shared.js"></script>
+<script src="/assets/dashboard.js"></script>
+</body>
+</html>
