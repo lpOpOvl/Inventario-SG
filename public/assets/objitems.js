@@ -45,7 +45,7 @@ async function _loadBp(){
         if(!isItem&&!isResource)return null;
         const resName=isResource?(opt.resourceName||''):(opt.entityName||'');
         if(!resName)return null;
-        const qty=isItem?(opt.quantity||1):(slot.requiredCount||1);
+        const qty=isItem?(opt.quantity||1):(opt.standardCargoUnits||slot.requiredCount||1);
         const propSegs={};
         (opt.modifiers||[]).forEach(m=>{
           const prop=_fmtProp(m.gameplayProperty||'');
@@ -56,7 +56,7 @@ async function _loadBp(){
         const mods=Object.entries(propSegs)
           .map(([property,segs])=>({property,segs:segs.sort((a,b)=>a.sq-b.sq)}))
           .filter(mod=>Math.abs(_oiPieceEval(mod.segs,1000)-_oiPieceEval(mod.segs,500))>0.0005);
-        return{name:resName,quantity:qty,modifiers:mods};
+        return{name:resName,quantity:qty,isItem,modifiers:mods};
       }).filter(Boolean);
       _bpMap[name.toLowerCase()]={name,category:bp.categoryName||'',ingredients:ings};
     });
@@ -232,7 +232,7 @@ function renderObjItemsList(){
       if(!ing.modifiers.length)return'';
       return`<div class="oi-ing-row">
         <span class="oi-ing-name" title="${esc(ing.name)}">${esc(ing.name)}</span>
-        <span class="oi-ing-qty">${ing.quantity}×</span>
+        <span class="oi-ing-qty">${ing.isItem?ing.quantity+'×':ing.quantity+' SCU'}</span>
         <input type="range" class="oi-slider" id="ois-${cid}-${ingIdx}" min="500" max="1000" step="1" value="500" style="--pct:0%" oninput="oiIngUpdate(${cid},${ingIdx},+this.value)">
         <span class="oi-qv" id="oiq-${cid}-${ingIdx}">500</span>
       </div>`;
