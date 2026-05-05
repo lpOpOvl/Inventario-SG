@@ -74,7 +74,7 @@ function _oiPieceEval(segs,quality){
 function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(mod){return _oiCalc(mod,500);}
 // Properties where lower modifier = better player experience → show improvement as positive
-const _INVERTED=new Set(['recoil smoothness','recoil handling','fuelrequirement']);
+const _INVERTED=new Set(['recoil smoothness','recoil handling','recoil kick','fuelrequirement']);
 function _sign(mod){return _INVERTED.has((mod.property||'').toLowerCase())?-1:1;}
 function _fmtDelta(mod,quality){
   const pct=(_oiCalc(mod,quality)-_oiBase(mod))*_sign(mod)*100;
