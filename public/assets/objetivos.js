@@ -4,6 +4,7 @@ let _objItemObjs=[];
 let _objBpIngMap=null;
 const _oLinkedMap={};
 let _oTipEl=null;
+let _oTipTimer=null;
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
@@ -49,16 +50,20 @@ function _oTip(){
   return _oTipEl;
 }
 function showObjTip(e,id){
-  const items=_oLinkedMap[id]||[];if(!items.length)return;
-  const tt=_oTip();
-  tt.innerHTML=`<div style="background:var(--card2);border:1px solid var(--border2);border-radius:0.65rem;padding:12px 16px;box-shadow:0 8px 28px rgba(0,0,0,0.5);min-width:160px;max-width:280px;">
-    <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Usado em</div>
-    ${items.map(n=>`<div style="font-size:0.82rem;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);line-height:1.3;">${esc(n)}</div>`).join('')}
-  </div>`;
-  tt.style.display='block';_oMoveTip(e);
+  clearTimeout(_oTipTimer);
+  const _e={clientX:e.clientX,clientY:e.clientY};
+  _oTipTimer=setTimeout(()=>{
+    const items=_oLinkedMap[id]||[];if(!items.length)return;
+    const tt=_oTip();
+    tt.innerHTML=`<div style="background:var(--card2);border:1px solid var(--border2);border-radius:0.65rem;padding:12px 16px;box-shadow:0 8px 28px rgba(0,0,0,0.5);min-width:160px;max-width:280px;">
+      <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Usado em</div>
+      ${items.map(n=>`<div style="font-size:0.82rem;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);line-height:1.3;">${esc(n)}</div>`).join('')}
+    </div>`;
+    tt.style.display='block';_oMoveTip(_e);
+  },400);
 }
 function _oMoveTip(e){const tt=_oTipEl;if(!tt||tt.style.display==='none')return;const x=e.clientX+16,y=e.clientY+16;tt.style.left=Math.min(x,window.innerWidth-tt.offsetWidth-12)+'px';tt.style.top=Math.min(y,window.innerHeight-tt.offsetHeight-12)+'px';}
-function hideObjTip(){if(_oTipEl)_oTipEl.style.display='none';}
+function hideObjTip(){clearTimeout(_oTipTimer);if(_oTipEl)_oTipEl.style.display='none';}
 
 function renderObjList(){
   const objs=objCache||[];
