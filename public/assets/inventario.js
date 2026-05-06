@@ -1,0 +1,151 @@
+let _invItems=[];
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(!requireAuth())return;
+  await initPage();
+  await invLoad();
+});
+
+async function invLoad(){
+  const el=document.getElementById('invContainer');
+  el.innerHTML='<div class="empty" style="opacity:0.5;">A carregar...</div>';
+  try{
+    const r=await fetch('/api/items?username='+encodeURIComponent(cUser));
+    const d=await r.json();
+    _invItems=d.items||[];
+  }catch{_invItems=[];}
+  invBuildLocFilter();
+  invFilter();
+}
+
+function invBuildLocFilter(){
+  const sel=document.getElementById('invLocFilter');
+  const locs=[...new Set(_invItems.map(i=>i.location||'').filter(Boolean))].sort();
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Todas as localizações</option>'+locs.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+
+function invFilter(){
+  const q=(document.getElementById('invSearch').value||'').toLowerCase();
+  const loc=document.getElementById('invLocFilter').value;
+  const filtered=_invItems.filter(i=>{
+    if(q&&!(i.name||'').toLowerCase().includes(q))return false;
+    if(loc&&(i.location||'')!==loc)return false;
+    return true;
+  });
+  invRender(filtered);
+}
+
+function invRender(items){
+  const el=document.getElementById('invContainer');
+  const statsEl=document.getElementById('invStats');
+
+  // Stats
+  const total=_invItems.length;
+  const unicas=[...new Set(_invItems.map(i=>i.name))].length;
+  const locs=[...new Set(_invItems.map(i=>i.location||'').filter(Boolean))].length;
+  statsEl.innerHTML=[
+    {label:'Total de Itens',val:total,color:'#a78bfa'},
+    {label:'Itens Únicos',val:unicas,color:'#60a5fa'},
+    {label:'Localizações',val:locs,color:'#34d399'},
+  ].map(s=>`<div style="background:var(--card);border:1px solid var(--border2);border-radius:0.6rem;padding:10px 18px;display:flex;flex-direction:column;gap:2px;">
+    <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;">${s.label}</div>
+    <div style="font-size:1.4rem;font-weight:800;color:${s.color};font-variant-numeric:tabular-nums;">${s.val}</div>
+  </div>`).join('');
+
+  if(!items.length){
+    el.innerHTML=`<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><p>${_invItems.length?'Sem resultados para os filtros aplicados.':'Sem itens ainda. Usa o OCR ou adiciona manualmente.'}</p></div>`;
+    return;
+  }
+
+  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:8px;">${items.map(item=>{
+    const hasQual=item.quality!=null;
+    const qualColor=item.quality>=800?'#22c55e':item.quality>=500?'#f59e0b':'#f87171';
+    return`<div class="obj-card" style="padding:12px 16px;gap:12px;align-items:center;">
+      <div style="width:34px;height:34px;border-radius:0.45rem;background:rgba(167,139,250,0.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.97rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(item.name)}</div>
+        ${item.notes?`<div style="font-size:0.75rem;color:var(--muted);margin-top:1px;">${esc(item.notes)}</div>`:''}
+      </div>
+      ${item.location?`<div style="flex-shrink:0;font-size:0.75rem;color:var(--muted);background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:2px 8px;white-space:nowrap;">${esc(item.location)}</div>`:''}
+      ${hasQual?`<div style="flex-shrink:0;text-align:center;"><div style="font-size:0.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Qual.</div><div style="font-size:0.92rem;font-weight:800;color:${qualColor};">${Math.round(item.quality)}</div></div>`:''}
+      <div style="flex-shrink:0;text-align:center;"><div style="font-size:0.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Qtd.</div><div style="font-size:0.92rem;font-weight:800;color:var(--text2);">${item.quantity??1}</div></div>
+      <div style="flex-shrink:0;display:flex;gap:6px;">
+        <button onclick="invOpenEdit(${item.id})" style="padding:5px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.4rem;color:var(--text2);font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Editar</button>
+        <button onclick="invDelete(${item.id},'${esc(item.name)}')" style="padding:5px 10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:0.4rem;color:#f87171;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Apagar</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function invOpenAdd(){
+  document.getElementById('invModalTitle').textContent='Adicionar Item';
+  document.getElementById('invModalId').value='';
+  document.getElementById('invMName').value='';
+  document.getElementById('invMQty').value='1';
+  document.getElementById('invMQual').value='';
+  document.getElementById('invMLoc').value='';
+  document.getElementById('invMNotes').value='';
+  document.getElementById('invModalStatus').textContent='';
+  document.getElementById('invModal').style.display='flex';
+  document.getElementById('invMName').focus();
+}
+
+function invOpenEdit(id){
+  const item=_invItems.find(i=>i.id===id);
+  if(!item)return;
+  document.getElementById('invModalTitle').textContent='Editar Item';
+  document.getElementById('invModalId').value=id;
+  document.getElementById('invMName').value=item.name||'';
+  document.getElementById('invMQty').value=item.quantity??1;
+  document.getElementById('invMQual').value=item.quality??'';
+  document.getElementById('invMLoc').value=item.location||'';
+  document.getElementById('invMNotes').value=item.notes||'';
+  document.getElementById('invModalStatus').textContent='';
+  document.getElementById('invModal').style.display='flex';
+}
+
+function invCloseModal(){document.getElementById('invModal').style.display='none';}
+
+async function invSave(){
+  const id=document.getElementById('invModalId').value;
+  const name=document.getElementById('invMName').value.trim();
+  const qty=document.getElementById('invMQty').value;
+  const qual=document.getElementById('invMQual').value;
+  const loc=document.getElementById('invMLoc').value.trim();
+  const notes=document.getElementById('invMNotes').value.trim();
+  const status=document.getElementById('invModalStatus');
+
+  if(!name){status.textContent='Nome obrigatório.';return;}
+
+  const payload={name};
+  if(qty)payload.quantity=parseFloat(qty);
+  if(qual)payload.quality=parseFloat(qual);
+  if(loc)payload.location=loc;
+  if(notes)payload.notes=notes;
+
+  try{
+    let r;
+    if(id){
+      r=await fetch('/api/items',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:+id,...payload})});
+    }else{
+      r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:cUser,...payload})});
+    }
+    if(r.ok){invCloseModal();await invLoad();}
+    else{const d=await r.json();status.textContent=d.error||'Erro ao guardar.';}
+  }catch{status.textContent='Sem ligação.';}
+}
+
+async function invDelete(id,nome){
+  if(!confirm(`Apagar "${nome}"?`))return;
+  try{
+    const r=await fetch('/api/items?id='+id,{method:'DELETE'});
+    if(r.ok)await invLoad();
+  }catch{}
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('invModal').addEventListener('click',function(e){if(e.target===this)invCloseModal();});

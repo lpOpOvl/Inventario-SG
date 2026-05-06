@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Shadow Guardians — Inventário Pessoal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<div class="dash">
+  <aside class="sidebar">
+    <div class="sb-header">
+      <img src="/sg-logo.png" alt="Shadow Guardians" style="width:44px;height:44px;object-fit:contain;flex-shrink:0;">
+      <div><div class="sb-name">Shadow Guardians</div><div class="sb-sub">Inventário de Minérios</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="sb-item" id="nav-inv" onclick="window.location.href='/dashboard.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/></svg>
+        Meu Inventário
+      </div>
+      <div class="sb-item active" id="nav-inventario" onclick="window.location.href='/inventario.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        Itens Pessoais
+      </div>
+      <div class="sb-item" id="nav-org" onclick="window.location.href='/org.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Inventário da Org
+      </div>
+      <div class="sb-item" id="nav-obj" onclick="window.location.href='/objetivos.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        Objetivos Minérios
+      </div>
+      <div class="sb-item" id="nav-objitems" onclick="window.location.href='/objitems.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        Objetivos Itens
+      </div>
+      <div class="sb-divider"></div>
+      <div class="sb-item" id="nav-pw" onclick="window.location.href='/dashboard.html?section=pw'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Alterar Password
+      </div>
+      <div class="sb-item" id="nav-hist" onclick="window.location.href='/historico.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Histórico
+      </div>
+      <div class="sb-item" id="nav-rules" onclick="window.location.href='/regras.html'">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Regras
+      </div>
+      <div class="sb-item admin-item" id="nav-admin" onclick="window.location.href='/admin.html'" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Administração
+      </div>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <span style="font-size:0.9rem;color:var(--muted);">Itens Pessoais</span>
+      <button class="user-btn" onclick="logout()">
+        <div class="user-av" id="uAv">?</div>
+        <span id="uName">—</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      </button>
+    </header>
+
+    <div class="content">
+      <div class="content-inner">
+        <div style="max-width:980px;margin:0 auto;">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap;">
+            <div>
+              <h1 class="page-title">Itens Pessoais</h1>
+              <p class="page-sub">O teu inventário de itens capturados e crafted</p>
+            </div>
+            <button onclick="invOpenAdd()" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;background:var(--accent);color:#000;border:none;border-radius:0.5rem;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Adicionar
+            </button>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+            <input id="invSearch" type="text" placeholder="Pesquisar item..." oninput="invFilter()" style="flex:1;min-width:180px;padding:8px 12px;background:var(--card);border:1px solid var(--border2);border-radius:0.5rem;color:var(--text);font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;">
+            <select id="invLocFilter" onchange="invFilter()" style="padding:8px 12px;background:var(--card);border:1px solid var(--border2);border-radius:0.5rem;color:var(--text);font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;cursor:pointer;">
+              <option value="">Todas as localizações</option>
+            </select>
+          </div>
+
+          <div id="invStats" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;"></div>
+          <div id="invContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Adicionar/Editar -->
+<div id="invModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:0.9rem;padding:28px 28px 20px;min-width:320px;max-width:420px;width:90%;box-shadow:0 12px 40px rgba(0,0,0,0.5);">
+    <h3 id="invModalTitle" style="margin:0 0 18px;font-size:1rem;font-weight:700;color:var(--text);">Adicionar Item</h3>
+    <input type="hidden" id="invModalId">
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div>
+        <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Nome do Item</label>
+        <input id="invMName" type="text" placeholder="Ex: FR-86" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <div style="flex:1;">
+          <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Quantidade</label>
+          <input id="invMQty" type="number" min="0" step="any" placeholder="1" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Qualidade</label>
+          <input id="invMQual" type="number" min="0" max="1000" placeholder="—" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Localização</label>
+        <input id="invMLoc" type="text" placeholder="Ex: Stanton, Area18" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
+      </div>
+      <div>
+        <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Notas</label>
+        <input id="invMNotes" type="text" placeholder="Opcional" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
+      </div>
+    </div>
+    <div id="invModalStatus" style="font-size:0.78rem;color:var(--muted);margin-top:10px;min-height:18px;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;">
+      <button onclick="invCloseModal()" style="padding:8px 18px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text2);font-size:0.85rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Cancelar</button>
+      <button onclick="invSave()" style="padding:8px 18px;background:var(--accent);border:none;border-radius:0.45rem;color:#000;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/assets/shared.js"></script>
+<script src="/assets/inventario.js"></script>
+</body>
+</html>
