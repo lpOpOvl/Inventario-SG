@@ -82,7 +82,7 @@ function _oiPieceEval(segs,quality){
 }
 
 function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
-function _oiBase(mod){return _oiCalc(mod,500);}
+function _oiBase(){return 1;}
 
 const _FLIP=new Set(['recoil smoothness','recoil handling','fuelrequirement','fuel requirement']);
 const _NEG_GOOD=new Set(['recoil kick']);
@@ -117,7 +117,7 @@ function oiIngUpdate(cid,ingIdx,quality){
     ing.modifiers.forEach(mod=>{
       const p=mod.property||'';if(!p)return;
       if(!totals[p])totals[p]=0;
-      totals[p]+=(_oiCalc(mod,q)-_oiBase(mod))*100;
+      totals[p]+=(_oiCalc(mod,q)-_oiBase())*100;
     });
   });
 
@@ -127,7 +127,7 @@ function oiIngUpdate(cid,ingIdx,quality){
     ing.modifiers.forEach(mod=>{
       const p=mod.property||'';if(!p)return;
       if(!maxTotals[p])maxTotals[p]=0;
-      maxTotals[p]+=(_oiCalc(mod,1000)-_oiBase(mod))*100;
+      maxTotals[p]+=(_oiCalc(mod,1000)-_oiBase())*100;
     });
   });
 
@@ -138,7 +138,7 @@ function oiIngUpdate(cid,ingIdx,quality){
     const cls=_valCls(eff);
 
     const valEl=document.getElementById('oiv-'+cid+'-'+key);
-    if(valEl){valEl.textContent=(disp>=0?'+':'')+disp.toFixed(1)+'%';valEl.className='oi-stat-val '+cls;}
+    if(valEl){valEl.textContent=(disp>=0?'+':'')+disp.toFixed(2)+'%';valEl.className='oi-stat-val '+cls;}
 
     // Bar width = |delta actual| / |delta máximo possível| per property
     // Each slider only affects bars of properties it actually modifies
