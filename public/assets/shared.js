@@ -99,7 +99,7 @@ function buildLocSelects(){
   const grouped={};
   allLocations.forEach(l=>{const sys=l.system||'Outro';if(!grouped[sys])grouped[sys]=[];grouped[sys].push(l);});
   const html='<option value="">— Selecionar —</option>'+Object.keys(grouped).sort().map(sys=>`<optgroup label="${esc(sys)}">${grouped[sys].map(l=>`<option value="${esc(l.name)}">${esc(l.name)}</option>`).join('')}</optgroup>`).join('');
-  ['iLoc','aLoc'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
+  ['iLoc','aLoc','invMLoc'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html;});
 }
 
 // ── GOAL BANNER ───────────────────────────────────────────────────────────
