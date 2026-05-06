@@ -484,91 +484,113 @@ async function renderAdminActivity(){
   try{const r=await fetch('/api/activity');const d=await r.json();logs=d.logs||[];}catch{el.innerHTML='<div style="color:#f87171;">Erro ao carregar.</div>';return;}
 
   const now=Date.now();
-  function parseTs(ts){return new Date((ts||'').replace(' ','T')+'Z').getTime();}
-  function timeAgo(ts){const s=Math.floor((now-parseTs(ts))/1000);if(s<60)return'agora';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d atrás';}
-  function devIcon(ua){return/Mobile|Android|iPhone|iPad/i.test(ua||'')?'📱':'🖥️';}
+  const parseTs=ts=>new Date((ts||'').replace(' ','T')+'Z').getTime();
+  const timeAgo=ts=>{const s=Math.floor((now-parseTs(ts))/1000);if(s<60)return'agora';if(s<3600)return Math.floor(s/60)+'m';if(s<86400)return Math.floor(s/3600)+'h';return Math.floor(s/86400)+'d';};
+  const devIcon=ua=>/Mobile|Android|iPhone|iPad/i.test(ua||'')?'📱':'🖥️';
+  const pageLbl={dashboard:'Inventário',org:'Org',objetivos:'Obj. Minérios',objitems:'Obj. Itens',historico:'Histórico',regras:'Regras',admin:'Admin',home:'Login'};
 
-  const today=new Date().toISOString().slice(0,10);
-  const weekAgo=new Date(now-7*864e5).toISOString().slice(0,10);
+  const today=new Date(now).toISOString().slice(0,10);
+  const days14=[];for(let i=13;i>=0;i--){days14.push(new Date(now-i*864e5).toISOString().slice(0,10));}
+  const weekAgo=days14[7];
 
-  const loginsToday=logs.filter(l=>l.action==='login'&&(l.timestamp||'').startsWith(today)).length;
-  const activeWeek=new Set(logs.filter(l=>l.timestamp>=weekAgo.replace('T',' ')).map(l=>l.username)).size;
-  const totalLogins=logs.filter(l=>l.action==='login').length;
-  const totalLogouts=logs.filter(l=>l.action==='logout').length;
+  const pv=logs.filter(l=>l.action==='pageview');
+  const pvToday=pv.filter(l=>(l.timestamp||'').startsWith(today));
 
-  // Per-user login counts
-  const userCnt={};
-  logs.filter(l=>l.action==='login').forEach(l=>{userCnt[l.username]=(userCnt[l.username]||0)+1;});
-  const topUsers=Object.entries(userCnt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  // DAU per day (unique users)
+  const dauMap={};
+  pv.forEach(l=>{const d=(l.timestamp||'').slice(0,10);if(!dauMap[d])dauMap[d]=new Set();dauMap[d].add(l.username);});
+  const dauToday=(dauMap[today]||new Set()).size;
+  const activeWeek=new Set(pv.filter(l=>(l.timestamp||'').slice(0,10)>=weekAgo).map(l=>l.username)).size;
+  const pvTodayCount=pvToday.length;
 
-  // Daily logins last 10 days
-  const days=[];for(let i=9;i>=0;i--){const d=new Date(now-i*864e5);days.push(d.toISOString().slice(0,10));}
-  const dayCnt={};
-  logs.filter(l=>l.action==='login').forEach(l=>{const d=(l.timestamp||'').slice(0,10);if(dayCnt[d]!==undefined||days.includes(d))dayCnt[d]=(dayCnt[d]||0)+1;});
-  const dayMax=Math.max(1,...days.map(d=>dayCnt[d]||0));
+  // Per-user pageview count (all time)
+  const userPvCnt={};
+  pv.forEach(l=>{userPvCnt[l.username]=(userPvCnt[l.username]||0)+1;});
+  const topUsers=Object.entries(userPvCnt).sort((a,b)=>b[1]-a[1]).slice(0,10);
 
-  const statCard=(val,lbl,clr='var(--accent2)')=>`<div style="background:var(--card2);border:1px solid var(--border2);border-radius:0.65rem;padding:14px 18px;text-align:center;flex:1;min-width:100px;">
-    <div style="font-size:1.6rem;font-weight:800;color:${clr};">${val}</div>
-    <div style="font-size:0.72rem;color:var(--muted);margin-top:3px;">${lbl}</div>
-  </div>`;
+  // Page popularity
+  const pageCnt={};
+  pv.forEach(l=>{const p=l.page||'?';pageCnt[p]=(pageCnt[p]||0)+1;});
+  const topPages=Object.entries(pageCnt).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxPage=Math.max(1,...topPages.map(p=>p[1]));
 
-  const chartBars=days.map(d=>{
-    const cnt=dayCnt[d]||0;
-    const pct=Math.round(cnt/dayMax*100);
-    const label=d.slice(5); // MM-DD
-    return`<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;">
-      <div style="font-size:0.68rem;color:var(--accent2);font-weight:700;">${cnt||''}</div>
-      <div style="flex:1;width:100%;display:flex;align-items:flex-end;min-height:40px;">
-        <div style="width:100%;background:${cnt>0?'var(--accent)':'var(--muted2)'};border-radius:3px 3px 0 0;height:${pct||2}%;min-height:${cnt>0?'4px':'2px'};transition:height 0.3s;"></div>
+  // DAU chart (last 14 days)
+  const dauMax=Math.max(1,...days14.map(d=>(dauMap[d]||new Set()).size));
+  const chartBars=days14.map(d=>{
+    const dau=(dauMap[d]||new Set()).size;
+    const pct=Math.round(dau/dauMax*100);
+    return`<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;">
+      <div style="font-size:0.62rem;color:var(--accent2);font-weight:700;min-height:12px;">${dau||''}</div>
+      <div style="flex:1;width:100%;display:flex;align-items:flex-end;">
+        <div style="width:100%;background:${dau>0?'var(--accent)':'var(--muted2)'};border-radius:3px 3px 0 0;height:${pct||2}%;min-height:${dau>0?'4px':'2px'};"></div>
       </div>
-      <div style="font-size:0.62rem;color:var(--muted);white-space:nowrap;">${label}</div>
+      <div style="font-size:0.58rem;color:var(--muted);white-space:nowrap;">${d.slice(5)}</div>
     </div>`;
   }).join('');
 
-  const topUsersHtml=topUsers.map(([u,c])=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:0.82rem;font-weight:600;color:var(--text);">${esc(u)}</span>
-      <span style="font-size:0.78rem;color:var(--accent2);font-weight:700;">${c}×</span>
-    </div>`).join('');
+  const statCard=(val,lbl,clr='var(--accent2)')=>`<div style="background:var(--card2);border:1px solid var(--border2);border-radius:0.65rem;padding:14px 18px;text-align:center;flex:1;min-width:90px;">
+    <div style="font-size:1.6rem;font-weight:800;color:${clr};line-height:1.1;">${val}</div>
+    <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;line-height:1.3;">${lbl}</div>
+  </div>`;
 
-  const logRows=logs.slice(0,120).map(l=>`
+  const topUsersHtml=topUsers.map(([u,c],i)=>{
+    const uc=userColor(u);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:0.7rem;color:var(--muted);width:16px;text-align:right;flex-shrink:0;">${i+1}</span>
+      <span style="flex:1;font-size:0.82rem;font-weight:600;color:${uc.text};">${esc(u)}</span>
+      <span style="font-size:0.75rem;font-weight:700;color:var(--accent2);">${c}</span>
+      <span style="font-size:0.65rem;color:var(--muted);">visitas</span>
+    </div>`;
+  }).join('');
+
+  const topPagesHtml=topPages.map(([p,c])=>{
+    const barW=Math.round(c/maxPage*100);
+    return`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;">
+      <span style="font-size:0.78rem;font-weight:600;color:var(--text2);flex:0 0 110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(pageLbl[p]||p)}</span>
+      <div style="flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;">
+        <div style="width:${barW}%;height:100%;background:var(--accent);border-radius:3px;"></div>
+      </div>
+      <span style="font-size:0.72rem;color:var(--accent2);font-weight:700;flex-shrink:0;min-width:24px;text-align:right;">${c}</span>
+    </div>`;
+  }).join('');
+
+  // Recent feed — pageviews only, last 80
+  const feedRows=pv.slice(0,80).map(l=>`
     <tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:6px 8px;font-size:0.75rem;">${devIcon(l.user_agent)}</td>
-      <td style="padding:6px 8px;font-size:0.82rem;font-weight:600;color:var(--text);">${esc(l.username)}</td>
-      <td style="padding:6px 8px;">
-        <span style="font-size:0.72rem;font-weight:700;padding:2px 7px;border-radius:3px;background:${l.action==='login'?'rgba(34,197,94,0.12)':'rgba(248,113,113,0.12)'};color:${l.action==='login'?'#22c55e':'#f87171'};">${l.action==='login'?'login':'logout'}</span>
-      </td>
-      <td style="padding:6px 8px;font-size:0.74rem;color:var(--muted);">${timeAgo(l.timestamp)}</td>
-      <td style="padding:6px 8px;font-size:0.68rem;color:var(--muted2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc((l.user_agent||'').split(' ').slice(-2).join(' '))}</td>
+      <td style="padding:5px 8px;font-size:0.74rem;">${devIcon(l.user_agent)}</td>
+      <td style="padding:5px 8px;font-size:0.8rem;font-weight:600;color:var(--text);">${esc(l.username)}</td>
+      <td style="padding:5px 8px;font-size:0.75rem;color:var(--accent2);">${esc(pageLbl[l.page||'']||l.page||'?')}</td>
+      <td style="padding:5px 8px;font-size:0.72rem;color:var(--muted);">${timeAgo(l.timestamp)}</td>
     </tr>`).join('');
+
+  // Login/logout count
+  const totalLogins=logs.filter(l=>l.action==='login').length;
 
   el.innerHTML=`
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-      ${statCard(loginsToday,'Logins hoje','#22c55e')}
-      ${statCard(activeWeek,'Ativos (7d)','var(--accent2)')}
-      ${statCard(totalLogins,'Total logins')}
-      ${statCard(totalLogouts,'Total logouts','#f87171')}
+      ${statCard(dauToday,'Utilizadores<br>hoje','#22c55e')}
+      ${statCard(activeWeek,'Ativos<br>esta semana','var(--accent2)')}
+      ${statCard(pvTodayCount,'Páginas vistas<br>hoje')}
+      ${statCard(totalLogins,'Logins<br>total','#f59e0b')}
     </div>
-    <div class="admin-grid" style="margin-bottom:16px;">
+    <div class="admin-card" style="margin-bottom:14px;">
+      <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">Utilizadores únicos por dia — últimas 2 semanas</div>
+      <div style="display:flex;gap:4px;align-items:flex-end;height:70px;">${chartBars}</div>
+    </div>
+    <div class="admin-grid" style="margin-bottom:14px;">
       <div class="admin-card">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px;">Logins por dia (últimos 10d)</div>
-        <div style="display:flex;gap:6px;align-items:flex-end;height:80px;">${chartBars}</div>
+        <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Membros mais activos</div>
+        ${topUsersHtml||'<div style="color:var(--muted);font-size:0.82rem;">Sem dados ainda.</div>'}
       </div>
       <div class="admin-card">
-        <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:8px;">Top utilizadores</div>
-        ${topUsersHtml||'<div style="color:var(--muted);font-size:0.82rem;">Sem dados.</div>'}
+        <div style="font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">Páginas mais visitadas</div>
+        ${topPagesHtml||'<div style="color:var(--muted);font-size:0.82rem;">Sem dados ainda.</div>'}
       </div>
     </div>
     <div class="admin-card" style="padding:0;overflow:hidden;">
+      <div style="padding:10px 14px;font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid var(--border2);">Actividade recente</div>
       <table style="width:100%;border-collapse:collapse;">
-        <thead><tr style="border-bottom:1px solid var(--border2);">
-          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;"></th>
-          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;">Usuário</th>
-          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;">Ação</th>
-          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;">Quando</th>
-          <th style="padding:8px;font-size:0.72rem;color:var(--muted);font-weight:600;text-align:left;">Browser</th>
-        </tr></thead>
-        <tbody>${logRows}</tbody>
+        <tbody>${feedRows||'<tr><td colspan="4" style="padding:12px;color:var(--muted);font-size:0.82rem;">Sem dados ainda. As visitas aparecerão aqui assim que os membros abrirem uma página.</td></tr>'}</tbody>
       </table>
     </div>`;
 }

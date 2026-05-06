@@ -11,13 +11,13 @@ export async function onRequest(context) {
 
   if (method === "POST") {
     try {
-      const { username, action } = await request.json();
-      if (!username || !['login','logout'].includes(action))
+      const { username, action, page } = await request.json();
+      if (!username || !['login','logout','pageview'].includes(action))
         return Response.json({ error: "invalid" }, { status: 400, headers });
       const ua = (request.headers.get('User-Agent') || '').slice(0, 300);
       await env.DB.prepare(
-        "INSERT INTO activity_logs (username, action, user_agent) VALUES (?, ?, ?)"
-      ).bind(username, action, ua).run();
+        "INSERT INTO activity_logs (username, action, page, user_agent) VALUES (?, ?, ?, ?)"
+      ).bind(username, action, page || '', ua).run();
       return Response.json({ success: true }, { headers });
     } catch (err) {
       return Response.json({ error: err.message }, { status: 500, headers });
@@ -27,7 +27,7 @@ export async function onRequest(context) {
   if (method === "GET") {
     try {
       const { results: logs } = await env.DB.prepare(
-        "SELECT id, username, action, timestamp, user_agent FROM activity_logs ORDER BY id DESC LIMIT 400"
+        "SELECT id, username, action, page, timestamp, user_agent FROM activity_logs ORDER BY id DESC LIMIT 600"
       ).all();
       return Response.json({ logs }, { headers });
     } catch (err) {

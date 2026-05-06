@@ -4,10 +4,14 @@
 CREATE TABLE IF NOT EXISTS activity_logs (
   id         INTEGER  PRIMARY KEY AUTOINCREMENT,
   username   TEXT     NOT NULL,
-  action     TEXT     NOT NULL,  -- 'login' | 'logout'
+  action     TEXT     NOT NULL,  -- 'login' | 'logout' | 'pageview'
+  page       TEXT     DEFAULT '',
   timestamp  DATETIME DEFAULT CURRENT_TIMESTAMP,
   user_agent TEXT     DEFAULT ''
 );
+
+-- Se a tabela já existia sem a coluna page, executar:
+-- ALTER TABLE activity_logs ADD COLUMN page TEXT DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS objectives_items (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,

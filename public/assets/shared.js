@@ -52,6 +52,9 @@ async function initPage(){
   const av=document.getElementById('uAv');const nb=document.getElementById('uName');
   if(av){av.textContent=cUser[0].toUpperCase();const uc=userColor(cUser);av.style.background=`linear-gradient(135deg,${uc.text},${uc.border.replace('0.35','0.8').replace('0.3','0.8')})`;}
   if(nb)nb.textContent=cUser;
+  // Pageview ping — fire-and-forget, não bloqueia
+  const _pg=location.pathname.replace(/^\/|\.html$/g,'').replace(/^\s*$/,'home');
+  try{fetch('/api/activity',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:cUser,action:'pageview',page:_pg})});}catch{}
 
   const ca=_cGet('sg_admins');const cl=_cGet('sg_locs');
 
