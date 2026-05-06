@@ -93,8 +93,7 @@ const _isFlip=pk=>_FLIP.some(f=>pk.includes(f));
 const _isNegGood=pk=>_NEG_GOOD.some(f=>pk.includes(f));
 
 function _dispVal(prop,rawPct){
-  const pk=(prop||'').toLowerCase();
-  return _isFlip(pk)?-rawPct:rawPct;
+  return rawPct;
 }
 function _effVal(prop,rawPct){
   const pk=(prop||'').toLowerCase();
