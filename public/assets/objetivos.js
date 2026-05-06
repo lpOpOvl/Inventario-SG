@@ -1,5 +1,7 @@
 let objCache=[];
 let objActiveCat=null;
+let _objItemObjs=[];
+let _objBpIngMap=null;
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
@@ -7,8 +9,34 @@ document.addEventListener('DOMContentLoaded',async()=>{
   await renderObj();
 });
 
+async function _loadBpIngMap(){
+  if(_objBpIngMap)return;
+  _objBpIngMap={};
+  try{
+    const r=await fetch('/ptblueprints.json');
+    const raw=await r.json();
+    const arr=raw.blueprints||(Array.isArray(raw)?raw:[]);
+    arr.forEach(bp=>{
+      const name=(bp.blueprintName||'').toLowerCase();
+      if(!name)return;
+      const ings=(bp.slots||[]).map(slot=>{
+        const opt=slot.options&&slot.options[0];
+        if(!opt)return null;
+        return opt.resourceName||opt.entityName||null;
+      }).filter(Boolean);
+      _objBpIngMap[name]=ings;
+    });
+  }catch{}
+}
+
 async function renderObj(){
-  try{const r=await fetch('/api/objectives');const d=await r.json();objCache=d.objectives||[];}catch{objCache=[];}
+  const [od,oid]=await Promise.all([
+    fetch('/api/objectives').then(r=>r.json()).catch(()=>({})),
+    fetch('/api/objectives_items').then(r=>r.json()).catch(()=>({}))
+  ]);
+  objCache=od.objectives||[];
+  _objItemObjs=oid.objectives_items||[];
+  await _loadBpIngMap();
   renderObjList();
 }
 
@@ -41,6 +69,17 @@ function renderObjList(){
     const safecat=cat.replace(/'/g,"\\'");
     return'<button onclick="setObjCat(\''+safecat+'\')" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:0.5rem;font-size:0.84rem;font-weight:600;cursor:pointer;border:1px solid '+border+';background:'+bg+';color:'+clr+';transition:all 0.15s;font-family:\'Inter\',sans-serif;white-space:nowrap;flex-shrink:0;">'+esc(cat)+' <span style="font-size:0.7rem;opacity:0.7;">'+cats[cat].length+'</span></button>';
   }).join('')+'<div style="flex:1;"></div>';
+  // Build mineral → [item names] map from blueprints + active item objectives
+  const mineralToItems={};
+  _objItemObjs.forEach(oi=>{
+    const ings=_objBpIngMap[(oi.item||'').toLowerCase()]||[];
+    ings.forEach(ing=>{
+      const k=ing.toLowerCase();
+      if(!mineralToItems[k])mineralToItems[k]=[];
+      if(!mineralToItems[k].includes(oi.item))mineralToItems[k].push(oi.item);
+    });
+  });
+
   const items=objActiveCat==='__todos__'?objs.map((o,i)=>({o,i})):(cats[objActiveCat]||[]);
   const accentColors=['#fbbf24','#94a3b8','#b47c3c','#6366f1','#22c55e','#60a5fa','#f472b6','#34d399'];
   const rankClass=i=>i===0?'r1':i===1?'r2':i===2?'r3':'rn';
@@ -54,13 +93,18 @@ function renderObjList(){
     const iconColor=ic==='gem'?'#2dd4bf':'#f59e0b';
     const catColor=catColors[o.category||'']||'#94a3b8';
     const cardAccent=objActiveCat==='__todos__'?catColor:accent;
+    const linkedItems=mineralToItems[(o.item||'').toLowerCase()]||[];
+    const linkedText=linkedItems.length?`<div style="font-size:0.7rem;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${linkedItems.map(n=>esc(n)).join('  ·  ')}</div>`:'';
     return`<div class="obj-card" style="--obj-accent:${cardAccent};">
       <div class="obj-rank ${rankClass(i)}">${rankLabel(i)}</div>
       <div style="width:30px;height:30px;border-radius:0.4rem;background:${iconBg};display:flex;align-items:center;justify-content:center;color:${iconColor};flex-shrink:0;">${itemSvg(ic)}</div>
-      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;overflow:hidden;">
-        <span style="font-size:1.15rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(o.item)}</span>
-        ${objActiveCat==='__todos__'?`<span style="font-size:0.72rem;font-weight:600;color:${catColor};white-space:nowrap;flex-shrink:0;opacity:0.85;">${esc(o.category||'')}</span>`:''}
-        ${o.category==='Evento'&&o.event_name?`<span style="font-size:0.75rem;font-weight:600;color:#fbbf24;white-space:nowrap;flex-shrink:0;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:4px;padding:2px 8px;">&#9889; ${esc(o.event_name)}</span>`:''}
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
+          <span style="font-size:1.15rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(o.item)}</span>
+          ${objActiveCat==='__todos__'?`<span style="font-size:0.72rem;font-weight:600;color:${catColor};white-space:nowrap;flex-shrink:0;opacity:0.85;">${esc(o.category||'')}</span>`:''}
+          ${o.category==='Evento'&&o.event_name?`<span style="font-size:0.75rem;font-weight:600;color:#fbbf24;white-space:nowrap;flex-shrink:0;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:4px;padding:2px 8px;">&#9889; ${esc(o.event_name)}</span>`:''}
+        </div>
+        ${linkedText}
       </div>
       <div style="flex:0 0 160px;display:flex;align-items:center;justify-content:center;"><span style="font-size:0.8rem;color:var(--muted);white-space:nowrap;">${o.note?esc(o.note):''}</span></div>
       <div style="flex:0 0 120px;display:flex;align-items:center;justify-content:flex-end;">${hasTarget?`<div style="text-align:right;"><div style="font-size:0.6rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">${o.event_name?esc(o.event_name):'Meta'}</div><div style="font-size:1.1rem;font-weight:800;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.7rem;font-weight:600;color:var(--muted);">${unit}</span></div></div>`:''}</div>
