@@ -514,12 +514,13 @@ tr.editing .ff input,tr.editing .ff select{height:30px;font-size:0.82rem;}
 .oi-comb-row:last-child{border-bottom:none;padding-bottom:2px;}
 .oi-comb-top{display:flex;align-items:center;justify-content:space-between;}
 .oi-comb-prop{font-size:0.8rem;color:var(--text2);}
-.oi-bf{display:flex;align-items:center;gap:14px;margin-top:5px;}
+.oi-bf{display:flex;align-items:flex-end;justify-content:space-between;margin-top:5px;}
 .oi-bf-item{display:flex;flex-direction:column;gap:1px;}
+.oi-bf-item:last-child{text-align:right;}
 .oi-bf-lbl{font-size:0.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;}
 .oi-bf-val{font-size:0.88rem;font-weight:700;color:var(--text2);font-variant-numeric:tabular-nums;}
 .oi-bf-val.pos{color:#22c55e;}.oi-bf-val.neg{color:#f87171;}.oi-bf-val.neu{color:var(--text2);}
-.oi-bf-sep{font-size:0.75rem;color:var(--muted);padding-bottom:1px;}
+.oi-bf-sep{display:none;}
 .oi-ings{border-top:1px solid var(--border);padding:8px 16px 12px;display:flex;flex-direction:column;gap:7px;}
 .oi-ing-row{display:flex;align-items:center;gap:8px;min-width:0;}
 .oi-ing-name{font-size:0.74rem;font-weight:600;color:var(--text2);flex:0 0 90px;width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
