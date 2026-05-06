@@ -1,5 +1,5 @@
 let objItemsCache=[];let objItemsActiveCat=null;
-const _bpMap={};const _oiData={};const _oiQuality={};
+const _bpMap={};const _oiData={};const _oiQuality={};const _oiBStats={};
 
 const OBJ_ITEM_CATS=['Armas (FPS)','Armadura (FPS)','Armas (Veículo)','Componentes (Veículo)','Componentes (Mining)'];
 const OBJ_ITEM_COLORS={'Armas (FPS)':'#f87171','Armadura (FPS)':'#60a5fa','Armas (Veículo)':'#34d399','Componentes (Veículo)':'#a78bfa','Componentes (Mining)':'#f59e0b'};
@@ -58,7 +58,8 @@ async function _loadBp(){
           .filter(mod=>Math.abs(_oiPieceEval(mod.segs,1000)-_oiPieceEval(mod.segs,500))>0.0005);
         return{name:resName,quantity:qty,isItem,modifiers:mods};
       }).filter(Boolean);
-      _bpMap[name.toLowerCase()]={name,category:bp.categoryName||'',ingredients:ings};
+      const baseStats={};Object.entries(bp.vehicleBaseStats||{}).forEach(([k,v])=>{if(v==null)return;const fk=_fmtProp(k);if(fk)baseStats[fk]=v;});
+      _bpMap[name.toLowerCase()]={name,category:bp.categoryName||'',ingredients:ings,baseStats};
     });
   }catch{}
 }
@@ -83,6 +84,7 @@ function _oiPieceEval(segs,quality){
 
 function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(){return 1;}
+function _fmtNum(n){return Math.round(n).toLocaleString('pt-PT');}
 
 const _FLIP=new Set(['recoil smoothness','recoil handling','fuelrequirement','fuel requirement']);
 const _NEG_GOOD=new Set(['recoil kick']);
@@ -140,14 +142,18 @@ function oiIngUpdate(cid,ingIdx,quality){
     const valEl=document.getElementById('oiv-'+cid+'-'+key);
     if(valEl){valEl.textContent=(disp>=0?'+':'')+disp.toFixed(2)+'%';valEl.className='oi-stat-val '+cls;}
 
-    // Bar width = |delta actual| / |delta máximo possível| per property
-    // Each slider only affects bars of properties it actually modifies
     const fillEl=document.getElementById('oib-'+cid+'-'+key);
     if(fillEl){
       const maxDisp=Math.abs(_dispVal(prop,maxTotals[prop]||0));
       const barPct=maxDisp>0?Math.min(100,Math.abs(disp)/maxDisp*100):0;
       fillEl.style.width=barPct+'%';
       fillEl.className='oi-bar-f '+cls;
+    }
+
+    const finalEl=document.getElementById('oifs-'+cid+'-'+key);
+    if(finalEl){
+      const base=(_oiBStats[cid]||{})[prop];
+      if(base!=null){finalEl.textContent=_fmtNum(base*(1+rawVal/100));finalEl.className='oi-bf-val '+cls;}
     }
   });
 }
@@ -203,6 +209,7 @@ function renderObjItemsList(){
 
   Object.keys(_oiData).forEach(k=>delete _oiData[k]);
   Object.keys(_oiQuality).forEach(k=>delete _oiQuality[k]);
+  Object.keys(_oiBStats).forEach(k=>delete _oiBStats[k]);
 
   el.innerHTML=`<div class="oi-list">${items.map(({o,i})=>{
     const catColor=OBJ_ITEM_COLORS[o.category||'']||'#94a3b8';
@@ -214,6 +221,8 @@ function renderObjItemsList(){
     const cid=o.id||i;
     const bp=_bpMap[(o.item||'').toLowerCase()];
     _oiData[cid]=bp?bp.ingredients:[];
+    const baseStats=bp?bp.baseStats:{};
+    _oiBStats[cid]=baseStats;
     const ings=_oiData[cid];
 
     const propSet=[];const seen=new Set();
@@ -225,12 +234,15 @@ function renderObjItemsList(){
 
     const combinedRows=propSet.map(prop=>{
       const key=_propKey(prop);
+      const baseVal=(baseStats||{})[prop];
+      const hasBase=baseVal!=null;
       return`<div class="oi-comb-row">
         <div class="oi-comb-top">
           <span class="oi-comb-prop">${esc(prop)}</span>
           <span class="oi-stat-val neu" id="oiv-${cid}-${key}">+0.00%</span>
         </div>
         <div class="oi-bar"><div class="oi-bar-f neu" id="oib-${cid}-${key}" style="width:0%"></div></div>
+        ${hasBase?`<div class="oi-bf"><div class="oi-bf-item"><span class="oi-bf-lbl">BASE</span><span class="oi-bf-val">${_fmtNum(baseVal)}</span></div><span class="oi-bf-sep">→</span><div class="oi-bf-item"><span class="oi-bf-lbl">FINAL</span><span class="oi-bf-val neu" id="oifs-${cid}-${key}">${_fmtNum(baseVal)}</span></div></div>`:''}
       </div>`;
     }).join('');
 
@@ -261,7 +273,7 @@ function renderObjItemsList(){
         </div>
         <div class="oi-head-r">${noteBadge}${targetBadge}</div>
       </div>
-      ${hasMods?`<div class="oi-combined"><div class="oi-combined-hdr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Modificadores Combinados</div>${combinedRows}</div><div class="oi-ings">${ingSliders}</div>`:''}
+      ${hasMods?`<div class="oi-combined">${combinedRows}</div><div class="oi-ings">${ingSliders}</div>`:''}
     </div>`;
   }).join('')}</div>`;
 }
