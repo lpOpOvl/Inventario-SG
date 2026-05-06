@@ -7,6 +7,7 @@ from tkinter import font as tkfont
 from PIL import ImageEnhance
 
 API_URL  = "https://inventario-sg.pages.dev/api/items"
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 TOOLTIP_OFFSET_X = -10
 TOOLTIP_OFFSET_Y =  25
 TOOLTIP_W        = 360
