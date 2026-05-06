@@ -94,14 +94,16 @@ function renderObjList(){
     const catColor=catColors[o.category||'']||'#94a3b8';
     const cardAccent=objActiveCat==='__todos__'?catColor:accent;
     const linkedItems=mineralToItems[(o.item||'').toLowerCase()]||[];
-    const linkedText=linkedItems.length?`<span style="font-size:0.7rem;color:var(--muted);flex-shrink:1;">${linkedItems.map(n=>esc(n)).join('  ·  ')}</span>`:'';
+    const linkedText=linkedItems.length?`<div style="font-size:0.7rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">${linkedItems.map(n=>esc(n)).join('  ·  ')}</div>`:'';
     return`<div class="obj-card" style="--obj-accent:${cardAccent};">
       <div class="obj-rank ${rankClass(i)}">${rankLabel(i)}</div>
       <div style="width:30px;height:30px;border-radius:0.4rem;background:${iconBg};display:flex;align-items:center;justify-content:center;color:${iconColor};flex-shrink:0;">${itemSvg(ic)}</div>
-      <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <span style="font-size:1.15rem;font-weight:700;color:var(--text);white-space:nowrap;">${esc(o.item)}</span>
-        ${objActiveCat==='__todos__'?`<span style="font-size:0.72rem;font-weight:600;color:${catColor};white-space:nowrap;flex-shrink:0;opacity:0.85;">${esc(o.category||'')}</span>`:''}
-        ${o.category==='Evento'&&o.event_name?`<span style="font-size:0.75rem;font-weight:600;color:#fbbf24;white-space:nowrap;flex-shrink:0;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:4px;padding:2px 8px;">&#9889; ${esc(o.event_name)}</span>`:''}
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
+          <span style="font-size:1.15rem;font-weight:700;color:var(--text);white-space:nowrap;">${esc(o.item)}</span>
+          ${objActiveCat==='__todos__'?`<span style="font-size:0.72rem;font-weight:600;color:${catColor};white-space:nowrap;flex-shrink:0;opacity:0.85;">${esc(o.category||'')}</span>`:''}
+          ${o.category==='Evento'&&o.event_name?`<span style="font-size:0.75rem;font-weight:600;color:#fbbf24;white-space:nowrap;flex-shrink:0;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:4px;padding:2px 8px;">&#9889; ${esc(o.event_name)}</span>`:''}
+        </div>
         ${linkedText}
       </div>
       <div style="flex:0 0 160px;display:flex;align-items:center;justify-content:center;"><span style="font-size:0.8rem;color:var(--muted);white-space:nowrap;">${o.note?esc(o.note):''}</span></div>
