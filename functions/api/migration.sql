@@ -13,6 +13,17 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 -- Se a tabela já existia sem a coluna page, executar:
 -- ALTER TABLE activity_logs ADD COLUMN page TEXT DEFAULT '';
 
+CREATE TABLE IF NOT EXISTS crafted_items (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  player_id  INTEGER NOT NULL REFERENCES players(id),
+  item_name  TEXT    NOT NULL,
+  category   TEXT    DEFAULT '',
+  qualities  TEXT    DEFAULT '{}',
+  stats      TEXT    DEFAULT '{}',
+  base_stats TEXT    DEFAULT '{}',
+  crafted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS objectives_items (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   item      TEXT    NOT NULL,

@@ -185,9 +185,37 @@ function oiOpenModal(cid){
     if(qEl)qEl.textContent=q;
   });
   if(ings.length)oiIngUpdate(cid,0,(_oiQuality[cid]||{})[0]??500);
+  const saveBtn=document.getElementById('oiSaveBtn');
+  if(saveBtn)saveBtn.onclick=()=>oiSaveCrafted(cid);
   document.getElementById('oiModal').style.display='flex';
 }
 function oiCloseModal(){document.getElementById('oiModal').style.display='none';}
+
+async function oiSaveCrafted(cid){
+  const meta=_oiMeta[cid];
+  if(!meta)return;
+  const ings=_oiData[cid]||[];
+  const qualities={};
+  ings.forEach((ing,idx)=>{qualities[ing.name]=(_oiQuality[cid]||{})[idx]??500;});
+  const stats={};
+  ings.forEach((ing,idx)=>{
+    const q=(_oiQuality[cid]||{})[idx]??500;
+    ing.modifiers.forEach(mod=>{
+      const p=mod.property||'';if(!p)return;
+      if(!stats[p])stats[p]=0;
+      stats[p]+=(_oiCalc(mod,q)-_oiBase())*100;
+    });
+  });
+  const payload={username:cUser,item_name:meta.name,category:meta.category,qualities,stats,base_stats:_oiBStats[cid]||{}};
+  const btn=document.getElementById('oiSaveBtn');
+  if(btn){btn.disabled=true;btn.textContent='A guardar...';}
+  try{
+    const r=await fetch('/api/crafted_items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(r.ok){toast('Item fabricado guardado!','ok');oiCloseModal();}
+    else{const d=await r.json();toast(d.error||'Erro ao guardar','err');}
+  }catch{toast('Sem ligação','err');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Guardar Fabricado';}}
+}
 
 function oiIngStep(cid,ingIdx,delta){
   const sl=document.getElementById('ois-'+cid+'-'+ingIdx);
@@ -298,7 +326,7 @@ function renderObjItemsList(){
 
     if(hasMods){
       _oiModalContent[cid]=`<div class="oi-combined">${combinedRows}</div><div class="oi-ings">${ingSliders}</div>`;
-      _oiMeta[cid]={name:o.item,catColor,iconSvg,iconBg,catBadge,noteBadge,targetBadge};
+      _oiMeta[cid]={name:o.item,category:o.category||'',catColor,iconSvg,iconBg,catBadge,noteBadge,targetBadge};
     }
     const chevron=hasMods?`<svg class="oi-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`:'';
     return`<div class="obj-card oi-card" style="--obj-accent:${cardAccent};--oi-accent:${catColor};${hasMods?'cursor:pointer;':''}" ${hasMods?`onclick="oiOpenModal(${cid})"`:''}>
