@@ -158,6 +158,15 @@ function oiIngUpdate(cid,ingIdx,quality){
   });
 }
 
+function oiToggle(cid,card){
+  const body=document.getElementById('oibody-'+cid);
+  if(!body)return;
+  const open=body.style.display!=='none';
+  body.style.display=open?'none':'block';
+  const chev=card.querySelector('.oi-chevron');
+  if(chev)chev.style.transform=open?'':'rotate(180deg)';
+}
+
 function oiIngStep(cid,ingIdx,delta){
   const sl=document.getElementById('ois-'+cid+'-'+ingIdx);
   if(!sl)return;
@@ -263,7 +272,8 @@ function renderObjItemsList(){
     const noteBadge=o.note?`<span style="font-size:0.75rem;color:var(--muted);">${esc(o.note)}</span>`:'';
     const targetBadge=hasTarget?`<div style="text-align:right;flex-shrink:0;"><div style="font-size:0.58rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Meta</div><div style="font-size:1rem;font-weight:700;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.65rem;color:var(--muted);">UND</span></div></div>`:'';
 
-    return`<div class="obj-card oi-card" style="--obj-accent:${cardAccent};--oi-accent:${catColor};">
+    const chevron=hasMods?`<svg class="oi-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`:'';
+    return`<div class="obj-card oi-card" style="--obj-accent:${cardAccent};--oi-accent:${catColor};" ${hasMods?`onclick="oiToggle(${cid},this)" style="cursor:pointer;--obj-accent:${cardAccent};--oi-accent:${catColor};"`:''}>
       <div class="oi-head">
         <div class="oi-head-l">
           <span class="obj-rank rn">${i+1}º</span>
@@ -271,9 +281,9 @@ function renderObjItemsList(){
           <span class="oi-name2">${esc(o.item)}</span>
           ${catBadge}
         </div>
-        <div class="oi-head-r">${noteBadge}${targetBadge}</div>
+        <div class="oi-head-r">${noteBadge}${targetBadge}${chevron}</div>
       </div>
-      ${hasMods?`<div class="oi-combined">${combinedRows}</div><div class="oi-ings">${ingSliders}</div>`:''}
+      ${hasMods?`<div class="oi-body" id="oibody-${cid}" style="display:none;"><div class="oi-combined">${combinedRows}</div><div class="oi-ings">${ingSliders}</div></div>`:''}
     </div>`;
   }).join('')}</div>`;
 }
