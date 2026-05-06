@@ -139,12 +139,26 @@ async function invSave(){
   }catch{status.textContent='Sem ligação.';}
 }
 
+let _invConfirmCb=null;
+function invConfirmCancel(){
+  document.getElementById('invConfirmOverlay').style.display='none';
+  _invConfirmCb=null;
+}
+function _invConfirmShow(msg,cb){
+  _invConfirmCb=cb;
+  document.getElementById('invConfirmMsg').textContent=msg;
+  const ov=document.getElementById('invConfirmOverlay');
+  ov.style.display='flex';
+  document.getElementById('invConfirmOk').onclick=()=>{ov.style.display='none';cb();};
+}
+
 async function invDelete(id,nome){
-  if(!confirm(`Apagar "${nome}"?`))return;
-  try{
-    const r=await fetch('/api/items?id='+id,{method:'DELETE'});
-    if(r.ok)await invLoad();
-  }catch{}
+  _invConfirmShow(`Apagar "${nome}"?`,async()=>{
+    try{
+      const r=await fetch('/api/items?id='+id,{method:'DELETE'});
+      if(r.ok)await invLoad();
+    }catch{}
+  });
 }
 
 // Fechar modal ao clicar fora
