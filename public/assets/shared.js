@@ -41,19 +41,38 @@ function logout(){
   window.location.href='/index.html';
 }
 
+// ── CACHE HELPERS (5 min TTL) ─────────────────────────────────────────────
+const _CACHE_TTL=5*60*1000;
+function _cGet(k){try{const s=localStorage.getItem(k);if(!s)return null;const{t,v}=JSON.parse(s);return Date.now()-t<_CACHE_TTL?v:null;}catch{return null;}}
+function _cSet(k,v){try{localStorage.setItem(k,JSON.stringify({t:Date.now(),v}));}catch{}}
+function _cBg(url,key,apply){fetch(url).then(r=>r.json()).then(d=>{_cSet(key,d);apply(d);}).catch(()=>{});}
+
 // ── PAGE INIT (topbar + admins + locs) ───────────────────────────────────
 async function initPage(){
-  const av=document.getElementById('uAv');
-  const nb=document.getElementById('uName');
-  if(av){
-    av.textContent=cUser[0].toUpperCase();
-    const uc=userColor(cUser);
-    av.style.background=`linear-gradient(135deg,${uc.text},${uc.border.replace('0.35','0.8').replace('0.3','0.8')})`;
-  }
+  const av=document.getElementById('uAv');const nb=document.getElementById('uName');
+  if(av){av.textContent=cUser[0].toUpperCase();const uc=userColor(cUser);av.style.background=`linear-gradient(135deg,${uc.text},${uc.border.replace('0.35','0.8').replace('0.3','0.8')})`;}
   if(nb)nb.textContent=cUser;
-  try{const ra=await fetch('/api/admins');const da=await ra.json();adminExtra=new Set(da.admins||[]);}catch{}
-  checkAdminUI();
-  await loadLocations();
+
+  const ca=_cGet('sg_admins');const cl=_cGet('sg_locs');
+
+  // Apply cache immediately — no network wait
+  if(ca){adminExtra=new Set(ca.admins||[]);checkAdminUI();}
+  if(cl){allLocations=cl.locations||[];buildLocSelects();}
+
+  if(ca&&cl){
+    // Both cached: refresh silently in background, return instantly
+    _cBg('/api/admins','sg_admins',d=>{adminExtra=new Set(d.admins||[]);checkAdminUI();});
+    _cBg('/api/locations','sg_locs',d=>{allLocations=d.locations||[];buildLocSelects();});
+    return;
+  }
+
+  // Missing cache: fetch both in parallel (first visit or expired)
+  const [ra,rl]=await Promise.all([
+    ca?null:fetch('/api/admins').then(r=>r.json()).catch(()=>null),
+    cl?null:fetch('/api/locations').then(r=>r.json()).catch(()=>null)
+  ]);
+  if(ra){_cSet('sg_admins',ra);adminExtra=new Set(ra.admins||[]);checkAdminUI();}
+  if(rl){_cSet('sg_locs',rl);allLocations=rl.locations||[];buildLocSelects();}
 }
 function checkAdminUI(){
   const show=isAdmin();
@@ -70,7 +89,7 @@ function checkAdminUI(){
 
 // ── LOCALIZAÇÕES ──────────────────────────────────────────────────────────
 async function loadLocations(){
-  try{const r=await fetch('/api/locations');const d=await r.json();allLocations=d.locations||[];}catch{allLocations=[];}
+  try{const r=await fetch('/api/locations');const d=await r.json();allLocations=d.locations||[];_cSet('sg_locs',d);}catch{allLocations=[];}
   buildLocSelects();
 }
 function buildLocSelects(){
