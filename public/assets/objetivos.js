@@ -124,6 +124,7 @@ function renderObjList(){
       </div>
       ${o.note?`<div style="flex:0 0 160px;display:flex;align-items:center;justify-content:center;"><span style="font-size:0.8rem;color:var(--muted);white-space:nowrap;">${esc(o.note)}</span></div>`:''}
       ${hasTarget?`<div style="flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;padding-left:12px;"><div style="text-align:right;"><div style="font-size:0.6rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">${o.event_name?esc(o.event_name):'Meta'}</div><div style="font-size:1.1rem;font-weight:800;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.7rem;font-weight:600;color:var(--muted);">${unit}</span></div></div></div>`:''}
+      <div style="flex-shrink:0;padding-left:16px;"><span style="font-size:0.78rem;font-weight:700;color:#22c55e;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.25);border-radius:5px;padding:3px 8px;white-space:nowrap;">900+</span></div>
     </div>`;
   }).join('')}</div>`;
 }
