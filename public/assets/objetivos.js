@@ -104,8 +104,8 @@ function renderObjList(){
         ${o.category==='Evento'&&o.event_name?`<span style="font-size:0.75rem;font-weight:600;color:#fbbf24;white-space:nowrap;flex-shrink:0;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:4px;padding:2px 8px;">&#9889; ${esc(o.event_name)}</span>`:''}
         ${linkedText}
       </div>
-      <div style="flex:0 0 160px;display:flex;align-items:center;justify-content:center;"><span style="font-size:0.8rem;color:var(--muted);white-space:nowrap;">${o.note?esc(o.note):''}</span></div>
-      <div style="flex:0 0 120px;display:flex;align-items:center;justify-content:flex-end;">${hasTarget?`<div style="text-align:right;"><div style="font-size:0.6rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">${o.event_name?esc(o.event_name):'Meta'}</div><div style="font-size:1.1rem;font-weight:800;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.7rem;font-weight:600;color:var(--muted);">${unit}</span></div></div>`:''}</div>
+      ${o.note?`<div style="flex:0 0 160px;display:flex;align-items:center;justify-content:center;"><span style="font-size:0.8rem;color:var(--muted);white-space:nowrap;">${esc(o.note)}</span></div>`:''}
+      ${hasTarget?`<div style="flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;padding-left:12px;"><div style="text-align:right;"><div style="font-size:0.6rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">${o.event_name?esc(o.event_name):'Meta'}</div><div style="font-size:1.1rem;font-weight:800;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.7rem;font-weight:600;color:var(--muted);">${unit}</span></div></div></div>`:''}
     </div>`;
   }).join('')}</div>`;
 }
