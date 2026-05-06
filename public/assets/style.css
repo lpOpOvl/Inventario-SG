@@ -63,8 +63,8 @@ body::after{content:'';position:fixed;inset:0;z-index:-1;background-image:radial
   flex-shrink:0;gap:12px;
 }
 .sb-logo{width:40px;height:40px;border-radius:0.5rem;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.sb-name{font-size:1.1rem;font-weight:700;color:var(--text);line-height:1.2;}
-.sb-sub{font-size:0.68rem;font-weight:600;color:var(--accent2);letter-spacing:0.07em;text-transform:uppercase;margin-top:2px;}
+.sb-name{font-size:1.1rem;font-weight:700;color:var(--text);line-height:1.2;text-align:center;}
+.sb-sub{font-size:0.68rem;font-weight:600;color:var(--accent2);letter-spacing:0.07em;text-transform:uppercase;margin-top:2px;text-align:center;}
 .sb-nav{padding:12px 8px;flex:1;}
 .sb-item{
   display:flex;align-items:center;gap:10px;
