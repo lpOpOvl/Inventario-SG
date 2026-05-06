@@ -1,0 +1,45 @@
+name: Build OCR Tool
+
+on:
+  push:
+    paths:
+      - 'tools/ocr_inventario.py'
+      - 'tools/requirements.txt'
+      - '.github/workflows/build-ocr.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r tools/requirements.txt
+
+      - name: Build exe
+        run: |
+          cd tools
+          pyinstaller --onefile --noconsole --name "SC-Inventario-OCR" ocr_inventario.py
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ocr-latest
+          name: SC Inventário OCR
+          body: |
+            Ferramenta OCR para capturar itens do Star Citizen.
+
+            **Como usar:**
+            1. Descarrega o `SC-Inventario-OCR.exe`
+            2. Instala o Tesseract: https://github.com/UB-Mannheim/tesseract/wiki
+            3. Abre o `.exe`, vai ao jogo e prime **F9** com o rato no item
+          files: tools/dist/SC-Inventario-OCR.exe
+          make_latest: true

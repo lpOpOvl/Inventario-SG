@@ -1,0 +1,6 @@
+pyautogui
+pytesseract
+keyboard
+requests
+pillow
+pyinstaller
