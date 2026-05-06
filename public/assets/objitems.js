@@ -87,16 +87,18 @@ function _oiCalc(mod,quality){return _oiPieceEval(mod.segs,quality);}
 function _oiBase(){return 1;}
 function _fmtNum(n){return Math.round(n).toLocaleString('pt-PT');}
 
-const _FLIP=new Set(['recoil smoothness','recoil handling','fuelrequirement','fuel requirement']);
-const _NEG_GOOD=new Set(['recoil kick']);
+const _FLIP=['recoil smoothness','recoil handling','fuel requirement','fuelrequirement'];
+const _NEG_GOOD=['recoil kick'];
+const _isFlip=pk=>_FLIP.some(f=>pk.includes(f));
+const _isNegGood=pk=>_NEG_GOOD.some(f=>pk.includes(f));
 
 function _dispVal(prop,rawPct){
   const pk=(prop||'').toLowerCase();
-  return _FLIP.has(pk)?-rawPct:rawPct;
+  return _isFlip(pk)?-rawPct:rawPct;
 }
 function _effVal(prop,rawPct){
   const pk=(prop||'').toLowerCase();
-  return(_FLIP.has(pk)||_NEG_GOOD.has(pk))?-rawPct:rawPct;
+  return(_isFlip(pk)||_isNegGood(pk))?-rawPct:rawPct;
 }
 function _valCls(eff){return eff>0.01?'pos':eff<-0.01?'neg':'neu';}
 function _propKey(prop){return prop.toLowerCase().replace(/[^a-z0-9]/g,'-');}
