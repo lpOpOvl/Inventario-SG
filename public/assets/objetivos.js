@@ -60,7 +60,7 @@ function showObjTip(e,id){
       ${items.map(n=>`<div style="font-size:0.82rem;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);line-height:1.3;">${esc(n)}</div>`).join('')}
     </div>`;
     tt.style.display='block';_oMoveTip(_e);
-  },400);
+  },650);
 }
 function _oMoveTip(e){const tt=_oTipEl;if(!tt||tt.style.display==='none')return;const x=e.clientX+16,y=e.clientY+16;tt.style.left=Math.min(x,window.innerWidth-tt.offsetWidth-12)+'px';tt.style.top=Math.min(y,window.innerHeight-tt.offsetHeight-12)+'px';}
 function hideObjTip(){clearTimeout(_oTipTimer);if(_oTipEl)_oTipEl.style.display='none';}
