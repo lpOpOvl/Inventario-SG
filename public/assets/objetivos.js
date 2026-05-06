@@ -2,6 +2,8 @@ let objCache=[];
 let objActiveCat=null;
 let _objItemObjs=[];
 let _objBpIngMap=null;
+const _oLinkedMap={};
+let _oTipEl=null;
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
@@ -41,6 +43,22 @@ async function renderObj(){
 }
 
 function setObjCat(cat){objActiveCat=cat;renderObjList();}
+
+function _oTip(){
+  if(!_oTipEl){_oTipEl=document.createElement('div');_oTipEl.style.cssText='position:fixed;z-index:9999;pointer-events:none;display:none;';document.body.appendChild(_oTipEl);}
+  return _oTipEl;
+}
+function showObjTip(e,id){
+  const items=_oLinkedMap[id]||[];if(!items.length)return;
+  const tt=_oTip();
+  tt.innerHTML=`<div style="background:var(--card2);border:1px solid var(--border2);border-radius:0.65rem;padding:12px 16px;box-shadow:0 8px 28px rgba(0,0,0,0.5);min-width:160px;max-width:280px;">
+    <div style="font-size:0.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Usado em</div>
+    ${items.map(n=>`<div style="font-size:0.82rem;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);line-height:1.3;">${esc(n)}</div>`).join('')}
+  </div>`;
+  tt.style.display='block';_oMoveTip(e);
+}
+function _oMoveTip(e){const tt=_oTipEl;if(!tt||tt.style.display==='none')return;const x=e.clientX+16,y=e.clientY+16;tt.style.left=Math.min(x,window.innerWidth-tt.offsetWidth-12)+'px';tt.style.top=Math.min(y,window.innerHeight-tt.offsetHeight-12)+'px';}
+function hideObjTip(){if(_oTipEl)_oTipEl.style.display='none';}
 
 function renderObjList(){
   const objs=objCache||[];
@@ -94,18 +112,18 @@ function renderObjList(){
     const catColor=catColors[o.category||'']||'#94a3b8';
     const cardAccent=objActiveCat==='__todos__'?catColor:accent;
     const linkedItems=mineralToItems[(o.item||'').toLowerCase()]||[];
-    const linkedText=linkedItems.length?`<span style="font-size:0.7rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;">${linkedItems.map(n=>esc(n)).join('  ·  ')}</span>`:'';
-    return`<div class="obj-card" style="--obj-accent:${cardAccent};">
+    _oLinkedMap[o.id]=linkedItems;
+    const hasTip=linkedItems.length>0;
+    return`<div class="obj-card" style="--obj-accent:${cardAccent};${hasTip?'cursor:default;':''}" ${hasTip?`onmouseenter="showObjTip(event,${o.id})" onmousemove="_oMoveTip(event)" onmouseleave="hideObjTip()"`:''}>
       <div class="obj-rank ${rankClass(i)}">${rankLabel(i)}</div>
       <div style="width:30px;height:30px;border-radius:0.4rem;background:${iconBg};display:flex;align-items:center;justify-content:center;color:${iconColor};flex-shrink:0;">${itemSvg(ic)}</div>
       <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;overflow:hidden;">
-        <span style="font-size:1.15rem;font-weight:700;color:var(--text);white-space:nowrap;flex-shrink:0;">${esc(o.item)}</span>
+        <span style="font-size:1.15rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(o.item)}</span>
         ${objActiveCat==='__todos__'?`<span style="font-size:0.72rem;font-weight:600;color:${catColor};white-space:nowrap;flex-shrink:0;opacity:0.85;">${esc(o.category||'')}</span>`:''}
         ${o.category==='Evento'&&o.event_name?`<span style="font-size:0.75rem;font-weight:600;color:#fbbf24;white-space:nowrap;flex-shrink:0;background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.3);border-radius:4px;padding:2px 8px;">&#9889; ${esc(o.event_name)}</span>`:''}
-        ${linkedText}
       </div>
-      ${o.note?`<div style="flex:0 0 160px;display:flex;align-items:center;justify-content:center;"><span style="font-size:0.8rem;color:var(--muted);white-space:nowrap;">${esc(o.note)}</span></div>`:''}
-      ${hasTarget?`<div style="flex-shrink:0;display:flex;align-items:center;justify-content:flex-end;padding-left:12px;"><div style="text-align:right;"><div style="font-size:0.6rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">${o.event_name?esc(o.event_name):'Meta'}</div><div style="font-size:1.1rem;font-weight:800;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.7rem;font-weight:600;color:var(--muted);">${unit}</span></div></div></div>`:''}
+      <div style="flex:0 0 160px;display:flex;align-items:center;justify-content:center;"><span style="font-size:0.8rem;color:var(--muted);white-space:nowrap;">${o.note?esc(o.note):''}</span></div>
+      <div style="flex:0 0 120px;display:flex;align-items:center;justify-content:flex-end;">${hasTarget?`<div style="text-align:right;"><div style="font-size:0.6rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">${o.event_name?esc(o.event_name):'Meta'}</div><div style="font-size:1.1rem;font-weight:800;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.7rem;font-weight:600;color:var(--muted);">${unit}</span></div></div>`:''}</div>
     </div>`;
   }).join('')}</div>`;
 }
