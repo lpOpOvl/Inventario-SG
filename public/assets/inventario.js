@@ -20,9 +20,13 @@ async function invLoad(){
 
 function invBuildLocFilter(){
   const sel=document.getElementById('invLocFilter');
-  const locs=[...new Set(_invItems.map(i=>i.location||'').filter(Boolean))].sort();
   const cur=sel.value;
-  sel.innerHTML='<option value="">Todas as localizações</option>'+locs.map(l=>`<option value="${esc(l)}">${esc(l)}</option>`).join('');
+  const grouped={};
+  allLocations.forEach(l=>{const sys=l.system||'Outro';if(!grouped[sys])grouped[sys]=[];grouped[sys].push(l);});
+  const opts=Object.keys(grouped).sort().map(sys=>
+    `<optgroup label="${esc(sys)}">${grouped[sys].map(l=>`<option value="${esc(l.name)}">${esc(l.name)}</option>`).join('')}</optgroup>`
+  ).join('');
+  sel.innerHTML='<option value="">Todas as localizações</option>'+opts;
   if(cur)sel.value=cur;
 }
 
