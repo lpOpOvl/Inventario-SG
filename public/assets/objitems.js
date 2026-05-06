@@ -223,13 +223,12 @@ function renderObjItemsList(){
     }));
     const hasMods=propSet.length>0;
 
-    // Stat rows with bar
-    const statRows=propSet.map(prop=>{
+    const combinedRows=propSet.map(prop=>{
       const key=_propKey(prop);
-      return`<div class="oi-stat">
-        <div class="oi-stat-row">
-          <span class="oi-stat-lbl">${esc(prop)}</span>
-          <span class="oi-stat-val neu" id="oiv-${cid}-${key}">+0.0%</span>
+      return`<div class="oi-comb-row">
+        <div class="oi-comb-top">
+          <span class="oi-comb-prop">${esc(prop)}</span>
+          <span class="oi-stat-val neu" id="oiv-${cid}-${key}">+0.00%</span>
         </div>
         <div class="oi-bar"><div class="oi-bar-f neu" id="oib-${cid}-${key}" style="width:0%"></div></div>
       </div>`;
@@ -262,7 +261,7 @@ function renderObjItemsList(){
         </div>
         <div class="oi-head-r">${noteBadge}${targetBadge}</div>
       </div>
-      ${hasMods?`<div class="oi-stats">${statRows}</div><div class="oi-ings">${ingSliders}</div>`:''}
+      ${hasMods?`<div class="oi-combined"><div class="oi-combined-hdr"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Modificadores Combinados</div>${combinedRows}</div><div class="oi-ings">${ingSliders}</div>`:''}
     </div>`;
   }).join('')}</div>`;
 }

@@ -504,15 +504,17 @@ tr.editing .ff input,tr.editing .ff select{height:30px;font-size:0.82rem;}
 .oi-head-r{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .oi-icon2{width:30px;height:30px;border-radius:0.45rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .oi-name2{font-size:0.95rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.oi-stats{border-top:1px solid var(--border);padding:8px 16px 6px;display:flex;flex-direction:column;gap:5px;}
-.oi-stat{display:flex;flex-direction:column;gap:3px;}
-.oi-stat-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-.oi-stat-lbl{font-size:0.76rem;color:var(--text2);}
-.oi-stat-val{font-size:0.82rem;font-weight:700;min-width:52px;text-align:right;font-variant-numeric:tabular-nums;}
+.oi-stat-val{font-size:0.95rem;font-weight:800;min-width:60px;text-align:right;font-variant-numeric:tabular-nums;}
 .oi-stat-val.pos{color:#22c55e;}.oi-stat-val.neg{color:#f87171;}.oi-stat-val.neu{color:var(--muted);}
-.oi-bar{height:3px;background:var(--bg2);border-radius:2px;overflow:hidden;}
+.oi-bar{height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;margin-top:6px;}
 .oi-bar-f{height:100%;border-radius:2px;width:0%;}
 .oi-bar-f.pos{background:#22c55e;}.oi-bar-f.neg{background:#f87171;}.oi-bar-f.neu{background:var(--muted2);}
+.oi-combined{border-top:1px solid var(--border);padding:10px 16px 12px;display:flex;flex-direction:column;gap:0;}
+.oi-combined-hdr{display:flex;align-items:center;gap:6px;font-size:0.67rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.09em;margin-bottom:8px;}
+.oi-comb-row{padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.oi-comb-row:last-child{border-bottom:none;padding-bottom:2px;}
+.oi-comb-top{display:flex;align-items:center;justify-content:space-between;}
+.oi-comb-prop{font-size:0.8rem;color:var(--text2);}
 .oi-ings{border-top:1px solid var(--border);padding:8px 16px 12px;display:flex;flex-direction:column;gap:7px;}
 .oi-ing-row{display:flex;align-items:center;gap:8px;min-width:0;}
 .oi-ing-name{font-size:0.74rem;font-weight:600;color:var(--text2);flex:0 0 90px;width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
