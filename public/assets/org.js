@@ -74,9 +74,7 @@ function renderOrg(){
           </div>
         </td>
         <td class="r" style="border-bottom:1px solid rgba(255,255,255,0.04);"><span class="holders-cell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>1</span></td>
-        <td style="border-bottom:1px solid rgba(255,255,255,0.04);text-align:right;">
-          ${adminMode?`<button class="btn btn-outline btn-sm" onclick="adminOrgEdit(${m.id},event)" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg></button><button class="btn btn-danger btn-sm" onclick="adminOrgDel(${m.id},event)" title="Remover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg></button>`:''}
-        </td>
+        <td style="border-bottom:1px solid rgba(255,255,255,0.04);"></td>
       </tr>`;
     }).join('');
     const orgUnit=oreUnit(g.name);
