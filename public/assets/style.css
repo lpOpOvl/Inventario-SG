@@ -505,9 +505,6 @@ tr.editing .ff input,tr.editing .ff select{height:30px;font-size:0.82rem;}
 .oi-icon2{width:30px;height:30px;border-radius:0.45rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .oi-name2{font-size:0.95rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .oi-chevron{color:var(--muted);flex-shrink:0;transition:transform 0.2s;}
-.oi-body{cursor:default;}
-.oi-slider,.oi-step{pointer-events:auto;}
-.oi-ings,.oi-combined{pointer-events:none;}.oi-ings input,.oi-ings button{pointer-events:auto;}
 .oi-stat-val{font-size:0.95rem;font-weight:800;min-width:60px;text-align:right;font-variant-numeric:tabular-nums;}
 .oi-stat-val.pos{color:#22c55e;}.oi-stat-val.neg{color:#f87171;}.oi-stat-val.neu{color:var(--muted);}
 .oi-bar{height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;margin-top:6px;}

@@ -1,5 +1,6 @@
 let objItemsCache=[];let objItemsActiveCat=null;
 const _bpMap={};const _oiData={};const _oiQuality={};const _oiBStats={};
+const _oiModalContent={};const _oiMeta={};
 
 const OBJ_ITEM_CATS=['Armas (FPS)','Armadura (FPS)','Armas (Veículo)','Componentes (Veículo)','Componentes (Mining)'];
 const OBJ_ITEM_COLORS={'Armas (FPS)':'#f87171','Armadura (FPS)':'#60a5fa','Armas (Veículo)':'#34d399','Componentes (Veículo)':'#a78bfa','Componentes (Mining)':'#f59e0b'};
@@ -158,14 +159,34 @@ function oiIngUpdate(cid,ingIdx,quality){
   });
 }
 
-function oiToggle(cid,card){
-  const body=document.getElementById('oibody-'+cid);
-  if(!body)return;
-  const open=body.style.display!=='none';
-  body.style.display=open?'none':'block';
-  const chev=card.querySelector('.oi-chevron');
-  if(chev)chev.style.transform=open?'':'rotate(180deg)';
+function oiOpenModal(cid){
+  const meta=_oiMeta[cid];const content=_oiModalContent[cid];
+  if(!meta||!content)return;
+  const hdr=document.getElementById('oiModalHdr');
+  const body=document.getElementById('oiModalBody');
+  hdr.innerHTML=`<div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+    <div style="width:36px;height:36px;border-radius:0.5rem;background:${meta.iconBg};color:${meta.catColor};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${meta.iconSvg}</div>
+    <span style="font-size:1.1rem;font-weight:800;color:var(--text);">${esc(meta.name)}</span>
+    ${meta.catBadge}
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">${meta.noteBadge}${meta.targetBadge}
+    <button onclick="oiCloseModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:flex;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>`;
+  body.innerHTML=content;
+  const ings=_oiData[cid]||[];
+  ings.forEach((_,idx)=>{
+    const q=(_oiQuality[cid]||{})[idx]??500;
+    const sl=document.getElementById('ois-'+cid+'-'+idx);
+    if(sl){sl.value=q;sl.style.setProperty('--pct',((q-500)/500*100)+'%');}
+    const qEl=document.getElementById('oiq-'+cid+'-'+idx);
+    if(qEl)qEl.textContent=q;
+  });
+  if(ings.length)oiIngUpdate(cid,0,(_oiQuality[cid]||{})[0]??500);
+  document.getElementById('oiModal').style.display='flex';
 }
+function oiCloseModal(){document.getElementById('oiModal').style.display='none';}
 
 function oiIngStep(cid,ingIdx,delta){
   const sl=document.getElementById('ois-'+cid+'-'+ingIdx);
@@ -219,6 +240,8 @@ function renderObjItemsList(){
   Object.keys(_oiData).forEach(k=>delete _oiData[k]);
   Object.keys(_oiQuality).forEach(k=>delete _oiQuality[k]);
   Object.keys(_oiBStats).forEach(k=>delete _oiBStats[k]);
+  Object.keys(_oiModalContent).forEach(k=>delete _oiModalContent[k]);
+  Object.keys(_oiMeta).forEach(k=>delete _oiMeta[k]);
 
   el.innerHTML=`<div class="oi-list">${items.map(({o,i})=>{
     const catColor=OBJ_ITEM_COLORS[o.category||'']||'#94a3b8';
@@ -272,8 +295,12 @@ function renderObjItemsList(){
     const noteBadge=o.note?`<span style="font-size:0.75rem;color:var(--muted);">${esc(o.note)}</span>`:'';
     const targetBadge=hasTarget?`<div style="text-align:right;flex-shrink:0;"><div style="font-size:0.58rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Meta</div><div style="font-size:1rem;font-weight:700;color:${catColor};line-height:1.2;">${targetFmt} <span style="font-size:0.65rem;color:var(--muted);">UND</span></div></div>`:'';
 
+    if(hasMods){
+      _oiModalContent[cid]=`<div class="oi-combined">${combinedRows}</div><div class="oi-ings">${ingSliders}</div>`;
+      _oiMeta[cid]={name:o.item,catColor,iconSvg,iconBg,catBadge,noteBadge,targetBadge};
+    }
     const chevron=hasMods?`<svg class="oi-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`:'';
-    return`<div class="obj-card oi-card" style="--obj-accent:${cardAccent};--oi-accent:${catColor};" ${hasMods?`onclick="oiToggle(${cid},this)" style="cursor:pointer;--obj-accent:${cardAccent};--oi-accent:${catColor};"`:''}>
+    return`<div class="obj-card oi-card" style="--obj-accent:${cardAccent};--oi-accent:${catColor};${hasMods?'cursor:pointer;':''}" ${hasMods?`onclick="oiOpenModal(${cid})"`:''}>
       <div class="oi-head">
         <div class="oi-head-l">
           <span class="obj-rank rn">${i+1}º</span>
@@ -283,7 +310,6 @@ function renderObjItemsList(){
         </div>
         <div class="oi-head-r">${noteBadge}${targetBadge}${chevron}</div>
       </div>
-      ${hasMods?`<div class="oi-body" id="oibody-${cid}" style="display:none;"><div class="oi-combined">${combinedRows}</div><div class="oi-ings">${ingSliders}</div></div>`:''}
     </div>`;
   }).join('')}</div>`;
 }
