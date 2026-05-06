@@ -8,6 +8,9 @@ on:
       - '.github/workflows/build-ocr.yml'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -27,13 +30,17 @@ jobs:
       - name: Build exe
         run: |
           cd tools
-          pyinstaller --onefile --noconsole --name "SC-Inventario-OCR" ocr_inventario.py
+          pyinstaller --onefile --noconsole --name "SC-Inventario-OCR" `
+            --hidden-import PIL `
+            --hidden-import PIL.Image `
+            --hidden-import PIL.ImageEnhance `
+            ocr_inventario.py
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ocr-latest
-          name: SC Inventário OCR
+          name: SC Inventario OCR
           body: |
             Ferramenta OCR para capturar itens do Star Citizen.
 
