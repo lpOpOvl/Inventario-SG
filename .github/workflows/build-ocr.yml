@@ -30,10 +30,9 @@ jobs:
       - name: Build exe
         run: |
           cd tools
-          pyinstaller --onefile --noconsole --name "SC-Inventario-OCR" `
-            --hidden-import PIL `
-            --hidden-import PIL.Image `
-            --hidden-import PIL.ImageEnhance `
+          pyinstaller --onefile --windowed --name "SC-Inventario-OCR" `
+            --hidden-import PIL._tkinter_finder `
+            --collect-all pytesseract `
             ocr_inventario.py
 
       - name: Upload Release
