@@ -33,11 +33,14 @@ function invBuildLocFilter(){
 function invFilter(){
   const q=(document.getElementById('invSearch').value||'').toLowerCase();
   const loc=document.getElementById('invLocFilter').value;
+  const sort=document.getElementById('invSortFilter')?.value||'qual_desc';
   const filtered=_invItems.filter(i=>{
     if(q&&!(i.name||'').toLowerCase().includes(q))return false;
     if(loc&&(i.location||'')!==loc)return false;
     return true;
   });
+  if(sort==='qual_desc')filtered.sort((a,b)=>(b.quality??-1)-(a.quality??-1));
+  else if(sort==='qual_asc')filtered.sort((a,b)=>(a.quality??-1)-(b.quality??-1));
   invRender(filtered);
 }
 
@@ -136,7 +139,20 @@ async function invSave(){
     if(id){
       r=await fetch('/api/items',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:+id,...payload})});
     }else{
-      r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:cUser,...payload})});
+      // Auto-merge: se já existe item com mesmo nome e mesma qualidade, soma a quantidade
+      const qualNum=qual!==''?Math.round(parseFloat(qual)):null;
+      const existing=_invItems.find(i=>{
+        if((i.name||'').toLowerCase()!==(name||'').toLowerCase())return false;
+        const iQual=i.quality!=null?Math.round(i.quality):null;
+        return qualNum===null?iQual===null:iQual===qualNum;
+      });
+      if(existing){
+        const newQty=(parseFloat(existing.quantity)||0)+(parseFloat(qty)||1);
+        r=await fetch('/api/items',{method:'PUT',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({id:existing.id,name:existing.name,quantity:newQty,quality:existing.quality??null,location:existing.location||'',notes:existing.notes||''})});
+      }else{
+        r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:cUser,...payload})});
+      }
     }
     if(r.ok){invCloseModal();await invLoad();}
     else{const d=await r.json();status.textContent=d.error||'Erro ao guardar.';}

@@ -90,6 +90,11 @@
             <select id="invLocFilter" onchange="invFilter()" style="padding:8px 12px;background:var(--card);border:1px solid var(--border2);border-radius:0.5rem;color:var(--text);font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;cursor:pointer;">
               <option value="">Todas as localizações</option>
             </select>
+            <select id="invSortFilter" onchange="invFilter()" style="padding:8px 12px;background:var(--card);border:1px solid var(--border2);border-radius:0.5rem;color:var(--text);font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;cursor:pointer;">
+              <option value="qual_desc">Qualidade ↓</option>
+              <option value="qual_asc">Qualidade ↑</option>
+              <option value="">Sem ordenação</option>
+            </select>
           </div>
 
           <div id="invStats" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;"></div>
