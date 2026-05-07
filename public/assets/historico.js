@@ -25,6 +25,7 @@ async function renderHist(){
   });
   document.getElementById('histCount').textContent=filtered.length+' registo'+(filtered.length!==1?'s':'');
   if(!filtered.length){document.getElementById('histContainer').innerHTML=`<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Sem transações registadas ainda.</p></div>`;return;}
+  const adminMode=isAdmin();
   const rows=filtered.map(t=>{
     const isGem=GEM_M.has(t.item_name);
     const qty=isGem?Math.round(t.quantity):fQ(t.quantity);
@@ -61,6 +62,11 @@ async function renderHist(){
       <td style="padding:12px 16px;text-align:right;font-size:0.78rem;color:var(--muted);">${before!=null?`${before} → ${after}`:''}</td>
       <td style="padding:12px 16px;font-size:0.82rem;color:var(--muted);">${t.location?esc(t.location):'—'}</td>
       <td style="padding:12px 16px;text-align:right;font-size:0.82rem;color:var(--accent2);">${t.quality!=null?'Q: '+t.quality:''}</td>
+      ${adminMode?`<td style="padding:8px 16px;text-align:right;">
+        <button onclick="histDelRow(${t.id},this)" title="Apagar linha" style="background:none;border:1px solid var(--border2);border-radius:0.4rem;color:var(--muted);cursor:pointer;padding:4px 8px;font-size:0.7rem;font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
+        </button>
+      </td>`:''}
     </tr>`;
   }).join('');
   document.getElementById('histContainer').innerHTML=`<table style="table-layout:auto;width:100%;border-collapse:collapse;">
@@ -73,7 +79,29 @@ async function renderHist(){
       <th style="padding:12px 16px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid var(--border);">Stock</th>
       <th style="padding:12px 16px;text-align:left;font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid var(--border);">Localização</th>
       <th style="padding:12px 16px;text-align:right;font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;border-bottom:1px solid var(--border);">Qualidade</th>
+      ${adminMode?`<th style="border-bottom:1px solid var(--border);"></th>`:''}
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
+}
+
+function histDelRow(id,btn){
+  if(btn.dataset.confirm!=='1'){
+    btn.dataset.confirm='1';
+    btn.style.color='#f87171';
+    btn.style.borderColor='rgba(248,113,113,0.5)';
+    btn.style.background='rgba(248,113,113,0.08)';
+    btn.innerHTML='Confirmar?';
+    setTimeout(()=>{
+      if(btn.dataset.confirm==='1'){
+        btn.dataset.confirm='';
+        btn.style.color='';btn.style.borderColor='';btn.style.background='';
+        btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>';
+      }
+    },3000);
+    return;
+  }
+  fetch('/api/transactions?id='+id,{method:'DELETE'})
+    .then(r=>{if(r.ok)renderHist();else toast('Erro ao apagar.','err');})
+    .catch(()=>toast('Sem ligação.','err'));
 }
