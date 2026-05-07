@@ -14,12 +14,14 @@ export async function onRequest(context) {
     if (method === "GET") {
       const username = url.searchParams.get("username");
       const org = url.searchParams.get("org");
+      const personal = url.searchParams.get("personal");
 
       if (org) {
         const { results: items } = await env.DB.prepare(`
           SELECT items.*, players.username as player_name
           FROM items
           JOIN players ON items.player_id = players.id
+          WHERE (items.personal = 0 OR items.personal IS NULL)
           ORDER BY items.name, players.username
         `).all();
         return Response.json({ items }, { headers });
@@ -28,18 +30,28 @@ export async function onRequest(context) {
       if (!username) return Response.json({ error: "username obrigatorio" }, { status: 400, headers });
       const player = await env.DB.prepare("SELECT id, username, created_at FROM players WHERE username = ?").bind(username).first();
       if (!player) return Response.json({ player: null, items: [] }, { headers });
-      const { results: items } = await env.DB.prepare("SELECT * FROM items WHERE player_id = ? ORDER BY name").bind(player.id).all();
+
+      let items;
+      if (personal === "1") {
+        ({ results: items } = await env.DB.prepare(
+          "SELECT * FROM items WHERE player_id = ? AND personal = 1 ORDER BY name"
+        ).bind(player.id).all());
+      } else {
+        ({ results: items } = await env.DB.prepare(
+          "SELECT * FROM items WHERE player_id = ? AND (personal = 0 OR personal IS NULL) ORDER BY name"
+        ).bind(player.id).all());
+      }
       return Response.json({ player, items }, { headers });
     }
 
     if (method === "POST") {
       const b = await request.json();
-      const { username, name, quantity, quality, location, notes } = b;
+      const { username, name, quantity, quality, location, notes, personal } = b;
       if (!username || !name) return Response.json({ error: "campos em falta" }, { status: 400, headers });
       const player = await env.DB.prepare("SELECT id FROM players WHERE username = ?").bind(username).first();
       if (!player) return Response.json({ error: "Jogador nao encontrado" }, { status: 404, headers });
-      await env.DB.prepare("INSERT INTO items (player_id, name, category, quantity, quality, location, notes) VALUES (?,?,?,?,?,?,?)")
-        .bind(player.id, name.trim(), 'Commodities', parseFloat(quantity)||0.001, quality??null, (location||'').trim(), (notes||'').trim()).run();
+      await env.DB.prepare("INSERT INTO items (player_id, name, category, quantity, quality, location, notes, personal) VALUES (?,?,?,?,?,?,?,?)")
+        .bind(player.id, name.trim(), 'Commodities', parseFloat(quantity)||0.001, quality??null, (location||'').trim(), (notes||'').trim(), personal===1?1:0).run();
       return Response.json({ success: true }, { status: 201, headers });
     }
 

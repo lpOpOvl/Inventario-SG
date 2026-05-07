@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS activity_logs (
 -- Se a tabela já existia sem a coluna page, executar:
 -- ALTER TABLE activity_logs ADD COLUMN page TEXT DEFAULT '';
 
+-- Separar itens pessoais dos itens da org:
+ALTER TABLE items ADD COLUMN personal INTEGER DEFAULT 0;
+
 CREATE TABLE IF NOT EXISTS crafted_items (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   player_id  INTEGER NOT NULL REFERENCES players(id),

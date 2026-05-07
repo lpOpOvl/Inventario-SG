@@ -10,7 +10,7 @@ async function invLoad(){
   const el=document.getElementById('invContainer');
   el.innerHTML='<div class="empty" style="opacity:0.5;">A carregar...</div>';
   try{
-    const r=await fetch('/api/items?username='+encodeURIComponent(cUser));
+    const r=await fetch('/api/items?username='+encodeURIComponent(cUser)+'&personal=1');
     const d=await r.json();
     _invItems=d.items||[];
   }catch{_invItems=[];}
@@ -151,7 +151,7 @@ async function invSave(){
         r=await fetch('/api/items',{method:'PUT',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({id:existing.id,name:existing.name,quantity:newQty,quality:existing.quality??null,location:existing.location||'',notes:existing.notes||''})});
       }else{
-        r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:cUser,...payload})});
+        r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:cUser,...payload,personal:1})});
       }
     }
     if(r.ok){invCloseModal();await invLoad();}
