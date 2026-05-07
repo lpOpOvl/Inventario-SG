@@ -25,7 +25,7 @@ async function renderHist(){
   });
   document.getElementById('histCount').textContent=filtered.length+' registo'+(filtered.length!==1?'s':'');
   if(!filtered.length){document.getElementById('histContainer').innerHTML=`<div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p>Sem transações registadas ainda.</p></div>`;return;}
-  const adminMode=isAdmin();
+  const adminMode=cUser==='lpOpOvl';
   const rows=filtered.map(t=>{
     const isGem=GEM_M.has(t.item_name);
     const qty=isGem?Math.round(t.quantity):fQ(t.quantity);
