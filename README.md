@@ -4,7 +4,7 @@ Construído com Cloudflare Pages + D1 (base de dados SQLite serverless).
 
 ---
 
-## 🚀 Como fazer o deploy (passo a passo)
+##  Como fazer o deploy (passo a passo)
 
 ### 1. Instalar o Wrangler
 ```bash
@@ -48,7 +48,7 @@ wrangler pages deploy public --project-name=star-citizen-inventory
 
 ---
 
-## 📁 Estrutura do projeto
+##  Estrutura do projeto
 ```
 star-citizen-inventory/
 ├── public/
@@ -61,7 +61,7 @@ star-citizen-inventory/
 └── README.md
 ```
 
-## ✨ Funcionalidades
+##  Funcionalidades
 - Login por callsign (sem password — cada jogador tem o seu inventário)
 - Adicionar itens com nome, categoria, quantidade, localização e notas
 - Editar itens inline (clica no ✎)
