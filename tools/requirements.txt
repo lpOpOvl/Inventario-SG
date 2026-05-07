@@ -1,5 +1,0 @@
-pyautogui
-pytesseract
-requests
-pillow
-pyinstaller
