@@ -149,8 +149,8 @@ function setView(v,el){
     document.getElementById('tbTitle').textContent='Regras';
     renderRulesPage();
   }else{
-    document.getElementById('tbTitle').textContent=isInv?'Stock para Org':'Inventário da Org';
-    document.getElementById('pgTitle').textContent=isInv?'Stock para Org':'Inventário da Org';
+    document.getElementById('tbTitle').textContent=isInv?'Stock para Org':'Stock da Org';
+    document.getElementById('pgTitle').textContent=isInv?'Stock para Org':'Stock da Org';
     document.getElementById('pgSub').textContent=isInv?'Os teus minérios registados':'Stock agregado de toda a organização';
     renderCurrent();
   }
