@@ -5,7 +5,7 @@ export async function onRequest(context) {
   const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
   if (method === "OPTIONS") return new Response(null, { headers });
@@ -43,6 +43,13 @@ export async function onRequest(context) {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(player.id, item_name, quantity, unit||'SCU', quality??null, location||'', quantity_before??null, quantity_after??null, type||'craft', to_player||null, notes||null).run();
       return Response.json({ success: true }, { status: 201, headers });
+    }
+
+    if (method === "DELETE") {
+      const id = url.searchParams.get("id");
+      if (!id) return Response.json({ error: "id obrigatorio" }, { status: 400, headers });
+      await env.DB.prepare("DELETE FROM transactions WHERE id = ?").bind(id).run();
+      return Response.json({ success: true }, { headers });
     }
 
     return Response.json({ error: "metodo nao suportado" }, { status: 405, headers });
