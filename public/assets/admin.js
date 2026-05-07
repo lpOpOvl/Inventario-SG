@@ -74,8 +74,84 @@ async function adminRevokeAdmin(u){
   try{const r=await fetch(`/api/admins?username=${encodeURIComponent(u)}`,{method:'DELETE'});if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}adminExtra.delete(u);renderAdminUsers();toast(`Permissões de ${u} removidas.`,'ok');}catch{toast('Erro ao revogar admin.','err');}
 }
 async function adminDelUser(u){
-  if(!confirm(`Remover usuário "${u}"? Esta acção é irreversível.`))return;
-  try{const r=await fetch(`/api/users?username=${encodeURIComponent(u)}`,{method:'DELETE'});if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}toast(`${u} removido.`,'ok');const[ru]=await Promise.all([fetch('/api/users')]);if(ru.ok)allUsers=(await ru.json()).users||[];renderAdminUsers();}catch{toast('Erro ao remover usuário.','err');}
+  let userItems=[];
+  try{const r=await fetch('/api/items?username='+encodeURIComponent(u));const d=await r.json();userItems=d.items||[];}catch{}
+  _showAdminUserModal(u,userItems);
+}
+
+function _adminUserModalId(){return '_adminUserModal';}
+
+function _showAdminUserModal(u,items){
+  const mid=_adminUserModalId();
+  const ex=document.getElementById(mid);if(ex)ex.remove();
+  const modal=document.createElement('div');
+  modal.id=mid;
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  modal.innerHTML=_adminUserModalHtml(u,items);
+  document.body.appendChild(modal);
+}
+
+function _adminUserModalHtml(u,items){
+  const mid=_adminUserModalId();
+  const itemRows=items.length?items.map(it=>{
+    const qty=GEM_M&&GEM_M.has(it.name)?Math.round(it.quantity):fQ(it.quantity);
+    const unit=oreUnit?oreUnit(it.name):'';
+    return`<div id="aum-item-${it.id}" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+      <div style="flex:1;min-width:0;">
+        <span style="font-size:0.86rem;font-weight:600;color:var(--text);">${esc(it.name)}</span>
+        <span style="font-size:0.76rem;color:var(--muted);margin-left:6px;">${qty} ${unit}</span>
+        ${it.location?`<span style="font-size:0.72rem;color:var(--muted);margin-left:4px;">• ${esc(it.location)}</span>`:''}
+      </div>
+      <button onclick="_aumDelItem(${it.id},'${esc(u)}')" style="padding:3px 9px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:0.35rem;color:#f87171;font-size:0.72rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0;">Apagar</button>
+    </div>`;
+  }).join(''):`<div style="font-size:0.84rem;color:var(--muted);padding:8px 0;">Sem itens no inventário.</div>`;
+
+  return`<div style="background:var(--card);border:1px solid var(--border2);border-radius:0.85rem;padding:24px 26px;max-width:420px;width:92%;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 32px rgba(0,0,0,0.4);max-height:85vh;overflow:hidden;">
+    <div style="font-size:1rem;font-weight:700;color:var(--text);">Remover "${esc(u)}"</div>
+    <div style="font-size:0.82rem;color:var(--muted);">Itens do utilizador (${items.length}). Podes apagar individualmente ou remover o utilizador (apaga tudo).</div>
+    <div style="overflow-y:auto;max-height:300px;padding-right:2px;">${itemRows}</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px;">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('${mid}').remove()">Cancelar</button>
+      <button id="aum-del-btn" class="btn btn-danger btn-sm" onclick="_aumDelUser('${esc(u)}',this)">Remover Utilizador</button>
+    </div>
+  </div>`;
+}
+
+async function _aumDelItem(id,u){
+  try{
+    const r=await fetch('/api/items?id='+id,{method:'DELETE'});
+    if(!r.ok)return toast('Erro ao apagar item.','err');
+    const row=document.getElementById('aum-item-'+id);
+    if(row)row.remove();
+    // Update count label
+    const modal=document.getElementById(_adminUserModalId());
+    if(modal){
+      const remaining=modal.querySelectorAll('[id^="aum-item-"]').length;
+      const sub=modal.querySelector('div[style*="Itens do utilizador"]');
+      if(sub)sub.textContent=`Itens do utilizador (${remaining}). Podes apagar individualmente ou remover o utilizador (apaga tudo).`;
+    }
+    toast('Item apagado.','ok');
+  }catch{toast('Erro ao apagar item.','err');}
+}
+
+async function _aumDelUser(u,btn){
+  if(btn.dataset.confirm!=='1'){
+    btn.dataset.confirm='1';
+    btn.textContent='Confirmar remoção?';
+    btn.style.background='rgba(248,113,113,0.25)';
+    btn.style.borderColor='rgba(248,113,113,0.6)';
+    setTimeout(()=>{if(btn.dataset.confirm==='1'){btn.dataset.confirm='';btn.textContent='Remover Utilizador';btn.style.background='';btn.style.borderColor='';}},4000);
+    return;
+  }
+  try{
+    const r=await fetch('/api/users?username='+encodeURIComponent(u),{method:'DELETE'});
+    if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}
+    toast(`${u} removido.`,'ok');
+    document.getElementById(_adminUserModalId())?.remove();
+    const ru=await fetch('/api/users');
+    if(ru.ok)allUsers=(await ru.json()).users||[];
+    renderAdminUsers();
+  }catch{toast('Erro ao remover utilizador.','err');}
 }
 
 // ── ADICIONAR ITEM ────────────────────────────────────────────────────────
