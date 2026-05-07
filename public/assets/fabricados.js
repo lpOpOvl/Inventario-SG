@@ -35,18 +35,7 @@ function fabRender(){
     el.innerHTML=emptyH('Ainda não fabricaste nenhum item. Vai a Objetivos Itens e clica num item para começar.');
     return;
   }
-  const grouped={};
-  fabCache.forEach(item=>{
-    if(!grouped[item.item_name])grouped[item.item_name]=[];
-    grouped[item.item_name].push(item);
-  });
-  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:20px;">${
-    Object.entries(grouped).map(([name,items])=>`
-      <div>
-        <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">${esc(name)} <span style="font-weight:400;opacity:0.6;">(${items.length})</span></div>
-        <div style="display:flex;flex-direction:column;gap:8px;">${items.map(fabCard).join('')}</div>
-      </div>`).join('')
-  }</div>`;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">${fabCache.map(fabCard).join('')}</div>`;
 }
 
 function fabCard(item){
