@@ -65,10 +65,10 @@ async function _loadBp(){
 }
 
 async function renderObjItems(){
-  const cached=_cGet('sg_obj_items');
-  if(cached){objItemsCache=cached.items||[];_cBg('/api/objectives_items','sg_obj_items',d=>{objItemsCache=d.items||[];renderObjItemsList();});}
+  const cached=_cGet('sg_obj_items2');
+  if(cached){objItemsCache=cached.objectives_items||[];_cBg('/api/objectives_items','sg_obj_items2',d=>{objItemsCache=d.objectives_items||[];renderObjItemsList();});}
   else{
-    try{const r=await fetch('/api/objectives_items');const d=await r.json();objItemsCache=d.items||[];_cSet('sg_obj_items',d);}catch{objItemsCache=[];}
+    try{const r=await fetch('/api/objectives_items');const d=await r.json();objItemsCache=d.objectives_items||[];_cSet('sg_obj_items2',d);}catch{objItemsCache=[];}
   }
   await _loadBp();
   renderObjItemsList();
