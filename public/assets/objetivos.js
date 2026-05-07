@@ -8,8 +8,7 @@ let _oTipTimer=null;
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
-  await initPage();
-  await renderObj();
+  await Promise.all([initPage(),renderObj()]);
 });
 
 async function _loadBpIngMap(){

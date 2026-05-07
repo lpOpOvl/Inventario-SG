@@ -2,8 +2,8 @@ let _invItems=[];
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
-  await initPage();
-  await invLoad();
+  await Promise.all([initPage(),invLoad()]);
+  invBuildLocFilter();
 });
 
 async function invLoad(){

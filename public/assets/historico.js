@@ -3,8 +3,7 @@ let histTab='all';
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
-  await initPage();
-  await renderHist();
+  await Promise.all([initPage(),renderHist()]);
 });
 
 function setHistTab(t){

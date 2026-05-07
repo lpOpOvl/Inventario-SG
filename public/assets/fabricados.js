@@ -15,8 +15,7 @@ let fabCache=[];
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
-  await initPage();
-  await fabLoad();
+  await Promise.all([initPage(),fabLoad()]);
 });
 
 async function fabLoad(){

@@ -7,8 +7,7 @@ const OBJ_ITEM_COLORS={'Armas (FPS)':'#f87171','Armadura (FPS)':'#60a5fa','Armas
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
-  await initPage();
-  await renderObjItems();
+  await Promise.all([initPage(),renderObjItems()]);
 });
 
 // Generic prefixes that add no display value — strip them
@@ -66,7 +65,11 @@ async function _loadBp(){
 }
 
 async function renderObjItems(){
-  try{const r=await fetch('/api/objectives_items');const d=await r.json();objItemsCache=d.objectives_items||[];}catch{objItemsCache=[];}
+  const cached=_cGet('sg_obj_items');
+  if(cached){objItemsCache=cached.items||[];_cBg('/api/objectives_items','sg_obj_items',d=>{objItemsCache=d.items||[];renderObjItemsList();});}
+  else{
+    try{const r=await fetch('/api/objectives_items');const d=await r.json();objItemsCache=d.items||[];_cSet('sg_obj_items',d);}catch{objItemsCache=[];}
+  }
   await _loadBp();
   renderObjItemsList();
 }

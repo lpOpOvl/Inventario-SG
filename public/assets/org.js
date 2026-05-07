@@ -3,9 +3,8 @@ let adminEditId=null;
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
-  await initPage();
   buildOreOptions();
-  await loadOrgData();
+  await Promise.all([initPage(),loadOrgData()]);
 });
 
 async function loadOrgData(){
