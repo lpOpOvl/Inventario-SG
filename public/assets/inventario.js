@@ -78,6 +78,7 @@ function invRender(items){
       ${hasQual?`<div style="flex-shrink:0;text-align:center;"><div style="font-size:0.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Qual.</div><div style="font-size:0.92rem;font-weight:800;color:${qualColor};">${Math.round(item.quality)}</div></div>`:''}
       <div style="flex-shrink:0;text-align:center;"><div style="font-size:0.58rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Qtd.</div><div style="font-size:0.92rem;font-weight:800;color:var(--text2);">${item.quantity??1}</div></div>
       <div style="flex-shrink:0;display:flex;gap:6px;">
+        <button onclick="invOpenMoveLoc(${item.id})" style="padding:5px 10px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:0.4rem;color:#60a5fa;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Mover</button>
         <button onclick="invOpenEdit(${item.id})" style="padding:5px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.4rem;color:var(--text2);font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Editar</button>
         <button onclick="invDelete(${item.id},'${esc(item.name)}')" style="padding:5px 10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:0.4rem;color:#f87171;font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">Apagar</button>
       </div>
@@ -141,6 +142,33 @@ async function invSave(){
     if(r.ok){invCloseModal();await invLoad();}
     else{const d=await r.json();status.textContent=d.error||'Erro ao guardar.';}
   }catch{status.textContent='Sem ligação.';}
+}
+
+function invOpenMoveLoc(id){
+  const item=_invItems.find(i=>i.id===id);
+  if(!item)return;
+  document.getElementById('invMoveLocId').value=id;
+  const sel=document.getElementById('invMoveLocSel');
+  const grouped={};
+  allLocations.forEach(l=>{const sys=l.system||'Outro';if(!grouped[sys])grouped[sys]=[];grouped[sys].push(l);});
+  const opts=Object.keys(grouped).sort().map(sys=>
+    `<optgroup label="${esc(sys)}">${grouped[sys].map(l=>`<option value="${esc(l.name)}">${esc(l.name)}</option>`).join('')}</optgroup>`
+  ).join('');
+  sel.innerHTML='<option value="">— Sem localização —</option>'+opts;
+  sel.value=item.location||'';
+  document.getElementById('invMoveLocOverlay').style.display='flex';
+}
+function invMoveLocCancel(){document.getElementById('invMoveLocOverlay').style.display='none';}
+async function invSaveMoveLoc(){
+  const id=+document.getElementById('invMoveLocId').value;
+  const loc=document.getElementById('invMoveLocSel').value;
+  const item=_invItems.find(i=>i.id===id);
+  if(!item)return;
+  try{
+    const r=await fetch('/api/items',{method:'PUT',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id,name:item.name,quantity:item.quantity,quality:item.quality??null,location:loc,notes:item.notes||''})});
+    if(r.ok){invMoveLocCancel();await invLoad();}
+  }catch{}
 }
 
 let _invConfirmCb=null;
