@@ -59,8 +59,8 @@ function _acRender(drop,q){
     const lo=item.name.toLowerCase();const idx=lo.indexOf(q);
     const hi=idx>=0?esc(item.name.slice(0,idx))+'<strong style="color:#90c5ff;">'+esc(item.name.slice(idx,idx+q.length))+'</strong>'+esc(item.name.slice(idx+q.length)):esc(item.name);
     const active=i===_acActive;
-    return`<div data-idx="${i}" style="padding:8px 12px;cursor:pointer;font-size:0.85rem;color:var(--text);background:${active?'rgba(59,130,246,0.18)':'transparent'};border-bottom:1px solid rgba(26,42,68,0.4);display:flex;justify-content:space-between;align-items:center;gap:8px;">
-      <span>${hi}</span><span style="font-size:0.68rem;color:var(--muted);white-space:nowrap;flex-shrink:0;">${esc(item.section)}</span>
+    return`<div data-idx="${i}" style="padding:8px 12px;cursor:pointer;font-size:0.85rem;color:var(--text);background:${active?'rgba(59,130,246,0.18)':'transparent'};border-bottom:1px solid rgba(26,42,68,0.4);">
+      ${hi}
     </div>`;
   }).join('');
   drop.style.display='block';
