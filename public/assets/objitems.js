@@ -214,8 +214,13 @@ async function oiSaveCrafted(cid){
   if(btn){btn.disabled=true;btn.textContent='A guardar...';}
   try{
     const r=await fetch('/api/crafted_items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    if(r.ok){toast('Item fabricado guardado!','ok');oiCloseModal();}
-    else{const d=await r.json();toast(d.error||'Erro ao guardar','err');}
+    if(r.ok){
+      // Adicionar ao Inventário Pessoal
+      await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:cUser,name:meta.name,quantity:1,personal:1,notes:'Fabricado'})});
+      toast('Item fabricado guardado e adicionado ao inventário pessoal!','ok');
+      oiCloseModal();
+    }else{const d=await r.json();toast(d.error||'Erro ao guardar','err');}
   }catch{toast('Sem ligação','err');}
   finally{if(btn){btn.disabled=false;btn.textContent='Guardar Fabricado';}}
 }
