@@ -1,10 +1,23 @@
 let _invItems=[];
+let _scNames=null;
 
 document.addEventListener('DOMContentLoaded',async()=>{
   if(!requireAuth())return;
   await Promise.all([initPage(),invLoad()]);
   invBuildLocFilter();
+  _loadScNames();
 });
+
+async function _loadScNames(){
+  if(_scNames!==null)return;
+  try{
+    const r=await fetch('/sc_names.json');
+    const d=await r.json();
+    _scNames=d;
+    const dl=document.getElementById('invItemsList');
+    if(dl)dl.innerHTML=d.map(i=>`<option value="${esc(i.name)}">`).join('');
+  }catch{_scNames=[];}
+}
 
 async function invLoad(){
   const el=document.getElementById('invContainer');
