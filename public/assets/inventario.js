@@ -154,6 +154,16 @@ function invRender(items){
   }).join('')}</div>`;
 }
 
+function invToggleQual(){
+  const row=document.getElementById('invQualRow');
+  const btn=document.getElementById('invQualToggle');
+  const show=row.style.display==='none';
+  row.style.display=show?'block':'none';
+  btn.textContent=show?'− Qualidade':'+ Qualidade';
+  btn.style.color=show?'var(--accent2)':'var(--muted)';
+  if(!show)document.getElementById('invMQual').value='';
+}
+
 function invOpenAdd(){
   document.getElementById('invModalTitle').textContent='Adicionar Item';
   document.getElementById('invModalId').value='';
@@ -163,6 +173,9 @@ function invOpenAdd(){
   document.getElementById('invMLoc').value='';
   document.getElementById('invMNotes').value='';
   document.getElementById('invModalStatus').textContent='';
+  document.getElementById('invQualRow').style.display='none';
+  document.getElementById('invQualToggle').textContent='+ Qualidade';
+  document.getElementById('invQualToggle').style.color='var(--muted)';
   document.getElementById('invModal').style.display='flex';
   document.getElementById('invMName').focus();
 }
@@ -178,6 +191,10 @@ function invOpenEdit(id){
   document.getElementById('invMLoc').value=item.location||'';
   document.getElementById('invMNotes').value=item.notes||'';
   document.getElementById('invModalStatus').textContent='';
+  const hasQual=item.quality!=null;
+  document.getElementById('invQualRow').style.display=hasQual?'block':'none';
+  document.getElementById('invQualToggle').textContent=hasQual?'− Qualidade':'+ Qualidade';
+  document.getElementById('invQualToggle').style.color=hasQual?'var(--accent2)':'var(--muted)';
   document.getElementById('invModal').style.display='flex';
 }
 

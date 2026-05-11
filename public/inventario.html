@@ -115,15 +115,16 @@
         <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Nome do Item</label>
         <input id="invMName" type="text" placeholder="Ex: FR-86" autocomplete="off" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
       </div>
-      <div style="display:flex;gap:10px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;">
         <div style="flex:1;">
           <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Quantidade</label>
           <input id="invMQty" type="number" min="0" step="any" placeholder="1" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
         </div>
-        <div style="flex:1;">
-          <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Qualidade</label>
-          <input id="invMQual" type="number" min="0" max="1000" placeholder="—" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
-        </div>
+        <button type="button" id="invQualToggle" onclick="invToggleQual()" style="flex-shrink:0;padding:8px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--muted);font-size:0.75rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;">+ Qualidade</button>
+      </div>
+      <div id="invQualRow" style="display:none;">
+        <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Qualidade</label>
+        <input id="invMQual" type="number" min="0" max="1000" placeholder="0 – 1000" style="width:100%;margin-top:4px;padding:8px 10px;background:var(--bg2);border:1px solid var(--border2);border-radius:0.45rem;color:var(--text);font-size:0.88rem;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;">
       </div>
       <div>
         <label style="font-size:0.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;">Localização</label>
