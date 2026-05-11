@@ -216,8 +216,9 @@ async function oiSaveCrafted(cid){
     const r=await fetch('/api/crafted_items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     if(r.ok){
       // Adicionar ao Inventário Pessoal
+      const today=new Date().toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
       await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:cUser,name:meta.name,quantity:1,personal:1,notes:'Fabricado'})});
+        body:JSON.stringify({username:cUser,name:meta.name,quantity:1,personal:1,notes:'Fabricado em '+today})});
       toast('Item fabricado guardado e adicionado ao inventário pessoal!','ok');
       oiCloseModal();
     }else{const d=await r.json();toast(d.error||'Erro ao guardar','err');}

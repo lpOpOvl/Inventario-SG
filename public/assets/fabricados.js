@@ -80,6 +80,7 @@ function fabCard(item){
         <div style="font-size:0.72rem;color:var(--muted);margin-top:1px;">${dateStr}</div>
       </div>
       ${item.category?`<span style="font-size:0.65rem;font-weight:600;color:${catColor};background:rgba(${rgb},0.1);border:1px solid rgba(${rgb},0.25);border-radius:4px;padding:2px 7px;white-space:nowrap;flex-shrink:0;">${esc(item.category)}</span>`:''}
+      <button onclick="fabAddToInv(${item.id})" style="padding:4px 10px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:0.4rem;color:#90c5ff;font-size:0.73rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0;" id="fabInvBtn-${item.id}">+ Inventário</button>
       <button onclick="fabDelete(${item.id},'${esc(item.item_name)}')" style="padding:4px 10px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);border-radius:0.4rem;color:#f87171;font-size:0.73rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0;">Apagar</button>
     </div>
     ${qualHtml}${statsHtml}
@@ -99,3 +100,24 @@ function fabDelete(id,nome){
   };
 }
 function fabConfirmCancel(){document.getElementById('fabConfirmOverlay').style.display='none';}
+
+async function fabAddToInv(id){
+  const item=fabCache.find(i=>i.id===id);
+  if(!item)return;
+  const btn=document.getElementById('fabInvBtn-'+id);
+  if(btn){btn.disabled=true;btn.textContent='A adicionar...';}
+  const date=new Date(item.crafted_at+'Z').toLocaleDateString('pt-PT',{day:'2-digit',month:'short',year:'numeric'});
+  try{
+    const r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:cUser,name:item.item_name,quantity:1,personal:1,notes:'Fabricado em '+date})});
+    if(r.ok){
+      if(btn){btn.textContent='✓ Adicionado';btn.style.color='#34d399';btn.style.borderColor='rgba(52,211,153,0.4)';}
+    }else{
+      if(btn){btn.disabled=false;btn.textContent='+ Inventário';}
+      toast('Erro ao adicionar ao inventário','err');
+    }
+  }catch{
+    if(btn){btn.disabled=false;btn.textContent='+ Inventário';}
+    toast('Sem ligação','err');
+  }
+}
