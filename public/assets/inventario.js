@@ -37,7 +37,7 @@ function _initAc(){
   inp.addEventListener('input',()=>{
     const q=inp.value.trim().toLowerCase();
     if(!q||!_scNames||!_scNames.length){_acHide();return;}
-    _acFiltered=_scNames.filter(i=>i.name.toLowerCase().includes(q)).slice(0,50);
+    _acFiltered=_scNames.filter(i=>i.name.toLowerCase().includes(q));
     _acActive=-1;
     _acRender(drop,q);
   });
