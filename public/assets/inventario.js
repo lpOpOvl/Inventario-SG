@@ -25,7 +25,7 @@ function _initAc(){
 
   const drop=document.createElement('div');
   drop.id='invAcDrop';
-  drop.style.cssText='position:absolute;top:100%;left:0;right:0;background:#0c1a2e;border:1px solid #1a2a44;border-top:none;border-radius:0 0 0.45rem 0.45rem;max-height:220px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.5);';
+  drop.style.cssText='position:absolute;top:100%;left:0;right:0;background:#0c1a2e;border:1px solid #1a2a44;border-top:none;border-radius:0 0 0.45rem 0.45rem;max-height:300px;overflow-y:auto;z-index:9999;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.5);';
   inp.parentNode.style.position='relative';
   inp.parentNode.appendChild(drop);
 
@@ -37,7 +37,7 @@ function _initAc(){
   inp.addEventListener('input',()=>{
     const q=inp.value.trim().toLowerCase();
     if(!q||!_scNames||!_scNames.length){_acHide();return;}
-    _acFiltered=_scNames.filter(i=>i.name.toLowerCase().includes(q)).slice(0,12);
+    _acFiltered=_scNames.filter(i=>i.name.toLowerCase().includes(q)).slice(0,50);
     _acActive=-1;
     _acRender(drop,q);
   });
