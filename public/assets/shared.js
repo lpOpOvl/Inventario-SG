@@ -196,6 +196,55 @@ function regEntrada(username,name,qty,quality,loc){
   fetch('/api/transactions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,item_name:name,quantity:qty,unit:oreUnit(name),quality,location:loc,quantity_before:0,quantity_after:qty,type:'entrada',to_player:null})});
 }
 
+// ── MOBILE SIDEBAR ────────────────────────────────────────────────────────
+function _initMobileSidebar(){
+  const topbar=document.querySelector('.topbar');
+  const sidebar=document.querySelector('.sidebar');
+  if(!topbar||!sidebar)return;
+
+  // Inject hamburger button
+  const btn=document.createElement('button');
+  btn.className='hamburger';
+  btn.setAttribute('aria-label','Menu');
+  btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+  topbar.prepend(btn);
+
+  // Inject backdrop
+  let backdrop=document.getElementById('sidebarBackdrop');
+  if(!backdrop){
+    backdrop=document.createElement('div');
+    backdrop.id='sidebarBackdrop';
+    backdrop.className='sidebar-backdrop';
+    document.body.appendChild(backdrop);
+  }
+
+  const open=()=>{sidebar.classList.add('open');backdrop.classList.add('show');document.body.style.overflow='hidden';};
+  const close=()=>{sidebar.classList.remove('open');backdrop.classList.remove('show');document.body.style.overflow='';};
+
+  btn.addEventListener('click',()=>sidebar.classList.contains('open')?close():open());
+  backdrop.addEventListener('click',close);
+
+  // Close on nav item click (for mobile UX)
+  sidebar.querySelectorAll('.sb-item').forEach(el=>el.addEventListener('click',()=>{if(window.innerWidth<768)close();}));
+}
+
+// ── SCROLL REVEAL ─────────────────────────────────────────────────────────
+function _initScrollReveal(){
+  const targets=document.querySelectorAll('.sc,.obj-card,.tbl-wrap,.rule-card,.admin-card');
+  if(!targets.length)return;
+  targets.forEach(el=>el.classList.add('reveal'));
+  if(!('IntersectionObserver' in window)){
+    targets.forEach(el=>el.classList.add('revealed'));return;
+  }
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('revealed');obs.unobserve(e.target);}});
+  },{threshold:0.08});
+  targets.forEach(el=>obs.observe(el));
+}
+
 // ── TOAST ─────────────────────────────────────────────────────────────────
 let tt;
 function toast(m,t){const el=document.getElementById('toast');el.textContent=m;el.className=`show ${t}`;clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),4000);}
+
+// Run after DOM ready
+document.addEventListener('DOMContentLoaded',()=>{_initMobileSidebar();_initScrollReveal();});
