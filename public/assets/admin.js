@@ -163,8 +163,8 @@ function renderAdminUserSelects(){
 function updateAdminQR(){
   const n=document.getElementById('aOre')?.value;if(!n)return;
   const h=document.getElementById('aQh');
-  if(h){h.textContent='900–1000 obrigatório';h.className='qhint warn';}
-  const qi=document.getElementById('aQual');if(qi){qi.min=900;qi.max=1000;qi.placeholder='900–1000';}
+  if(h){h.textContent='500–1000 obrigatório';h.className='qhint warn';}
+  const qi=document.getElementById('aQual');if(qi){qi.min=500;qi.max=1000;qi.placeholder='500–1000';}
   const isGem=GEM_M.has(n);
   const ql=document.getElementById('aQtyLabel');if(ql)ql.textContent=isGem?'Quantidade (UND)':'Quantidade (SCUs)';
   const aqty=document.getElementById('aQty');if(aqty){aqty.step=isGem?'1':'0.001';aqty.min=isGem?'1':'0.001';}
@@ -178,7 +178,7 @@ async function adminAddItem(){
   const isGem=GEM_M.has(n);
   if(isGem?qty<1:qty<0.001)return toast(isGem?'Quantidade mínima: 1 UND.':'Quantidade mínima: 0.001 SCUs.','err');
   const q=qs!==''?parseInt(qs):null;
-  if(q===null||isNaN(q)||q<900||q>1000)return toast('Qualidade obrigatória entre 900 e 1000.','err');
+  if(q===null||isNaN(q)||q<500||q>1000)return toast('Qualidade obrigatória entre 500 e 1000.','err');
   try{
     const r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,name:n,quantity:qty,quality:q,location:loc,notes:''})});
     if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}
@@ -356,7 +356,7 @@ async function adminAddObj(){
     const event_name=category==='Evento'?(document.getElementById('newObjEventoDesc').value.trim()||null):null;
     const r=await fetch('/api/objectives',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item,note,category,target_qty,event_name})});
     if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}
-    document.getElementById('newObjNote').value='Mínimo Q900';document.getElementById('newObjQty').value='';
+    document.getElementById('newObjNote').value='Mínimo Q500';document.getElementById('newObjQty').value='';
     const evd=document.getElementById('newObjEventoDesc');if(evd)evd.value='';
     renderAdminObj();toast(`"${item}" adicionado aos objetivos.`,'ok');
   }catch{toast('Erro ao adicionar.','err');}

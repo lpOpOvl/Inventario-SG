@@ -8,7 +8,7 @@ const ROC_M=new Set();
 let GEM_M=new Set(GEM_LIST);
 function refreshOreSets(){SHIP_M=new Set(SHIP_LIST);GEM_M=new Set(GEM_LIST);}
 const QSPEC={};
-function qCfg(n){return{min:900,max:1000,req:true};}
+function qCfg(n){return{min:500,max:1000,req:true};}
 function oreIcon(n){if(GEM_M.has(n))return'gem';if(SHIP_M.has(n))return'ship';return'comm';}
 function oreBadge(n){if(GEM_M.has(n))return['badge-gem','Gema'];if(SHIP_M.has(n))return['badge-ship','Minério'];return['badge-comm','Minério'];}
 function oreUnit(n){return GEM_M.has(n)?'UND':'SCU';}

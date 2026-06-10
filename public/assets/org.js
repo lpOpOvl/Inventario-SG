@@ -140,7 +140,7 @@ async function confirmAdminEdit(){
   const loc=document.getElementById('mAELoc').value.trim();
   const unit=oreUnit(name);
   if(unit==='UND'?qty<1:qty<0.001)return toast('Quantidade inválida.','err');
-  if(quality===null||quality<900||quality>1000)return toast('Qualidade obrigatória entre 900 e 1000.','err');
+  if(quality===null||quality<500||quality>1000)return toast('Qualidade obrigatória entre 500 e 1000.','err');
   try{
     await fetch('/api/items',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:adminEditId,name,quantity:qty,quality,location:loc,notes:item.notes||''})});
     document.getElementById('mAdminEdit').style.display='none';

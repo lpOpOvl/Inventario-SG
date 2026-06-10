@@ -68,8 +68,8 @@ function toggleAdd(){const p=document.getElementById('addPanel');p.style.display
 function updateQR(){
   const n=document.getElementById('iOre').value;
   const h=document.getElementById('qh');
-  h.textContent='900–1000 obrigatório';h.className='qhint warn';
-  const qi=document.getElementById('iQual');qi.min=900;qi.max=1000;qi.placeholder='900–1000';
+  h.textContent='500–1000 obrigatório';h.className='qhint warn';
+  const qi=document.getElementById('iQual');qi.min=500;qi.max=1000;qi.placeholder='500–1000';
   const isGem=GEM_M.has(n);
   document.getElementById('iQtyLabel').textContent=isGem?'Quantidade (UND)':'Quantidade (SCUs)';
   document.getElementById('iQty').step=isGem?'1':'0.001';
@@ -81,7 +81,7 @@ async function addItem(){
   const isGemAdd=GEM_M.has(n);
   if(isGemAdd?qty<1:qty<0.001)return toast(isGemAdd?'Quantidade mínima: 1 UND.':'Quantidade mínima: 0.001 SCUs.','err');
   const q=qs!==''?parseInt(qs):null;
-  if(q===null||isNaN(q)||q<900||q>1000)return toast('Qualidade obrigatória entre 900 e 1000.','err');
+  if(q===null||isNaN(q)||q<500||q>1000)return toast('Qualidade obrigatória entre 500 e 1000.','err');
   try{
     const r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:cUser,name:n,quantity:qty,quality:q,location:loc,notes:''})});
     if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}

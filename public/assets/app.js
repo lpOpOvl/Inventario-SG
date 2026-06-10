@@ -8,7 +8,7 @@ const ROC_M=new Set();
 let GEM_M=new Set(GEM_LIST);
 function refreshOreSets(){SHIP_M=new Set(SHIP_LIST);GEM_M=new Set(GEM_LIST);}
 const QSPEC={};
-function qCfg(n){return{min:900,max:1000,req:true};}
+function qCfg(n){return{min:500,max:1000,req:true};}
 function oreIcon(n){if(GEM_M.has(n))return'gem';if(SHIP_M.has(n))return'ship';return'comm';}
 function oreBadge(n){if(GEM_M.has(n))return['badge-gem','Gema'];if(SHIP_M.has(n))return['badge-ship','Minério'];return['badge-comm','Minério'];}
 function oreUnit(n){return GEM_M.has(n)?'UND':'SCU';}
@@ -297,9 +297,9 @@ function toggleAdd(){const p=document.getElementById('addPanel');p.style.display
 function updateQR(){
   const n=document.getElementById('iOre').value;
   const h=document.getElementById('qh');
-  h.textContent='900–1000 obrigatório';
+  h.textContent='500–1000 obrigatório';
   h.className='qhint warn';
-  const qi=document.getElementById('iQual');qi.min=900;qi.max=1000;qi.placeholder='900–1000';
+  const qi=document.getElementById('iQual');qi.min=500;qi.max=1000;qi.placeholder='500–1000';
   const isGem=GEM_M.has(n);
   document.getElementById('iQtyLabel').textContent=isGem?'Quantidade (UND)':'Quantidade (SCUs)';
   document.getElementById('iQty').step=isGem?'1':'0.001';
@@ -310,7 +310,7 @@ async function addItem(){
   const qs=document.getElementById('iQual').value,loc=document.getElementById('iLoc').value,notes='';
   const isGemAdd=GEM_M.has(n);if(isGemAdd?qty<1:qty<0.001)return toast(isGemAdd?'Quantidade mínima: 1 UND.':'Quantidade mínima: 0.001 SCUs.','err');
   const q=qs!==''?parseInt(qs):null;
-  if(q===null||isNaN(q)||q<900||q>1000)return toast('Qualidade obrigatória entre 900 e 1000.','err');
+  if(q===null||isNaN(q)||q<500||q>1000)return toast('Qualidade obrigatória entre 500 e 1000.','err');
   try{
     const r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:cUser,name:n,quantity:qty,quality:q,location:loc,notes})});
     if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}
@@ -640,8 +640,8 @@ async function adminDelUser(u){
 function updateAdminQR(){
   const n=document.getElementById('aOre').value;
   const h=document.getElementById('aQh');
-  h.textContent='900–1000 obrigatório';h.className='qhint warn';
-  const qi=document.getElementById('aQual');qi.min=900;qi.max=1000;qi.placeholder='900–1000';
+  h.textContent='500–1000 obrigatório';h.className='qhint warn';
+  const qi=document.getElementById('aQual');qi.min=500;qi.max=1000;qi.placeholder='500–1000';
   const isGem=GEM_M.has(n);
   document.getElementById('aQtyLabel').textContent=isGem?'Quantidade (UND)':'Quantidade (SCUs)';
   document.getElementById('aQty').step=isGem?'1':'0.001';
@@ -656,7 +656,7 @@ async function adminAddItem(){
   const loc=document.getElementById('aLoc').value;
   if(qty<0.001)return toast('Quantidade mínima: 0.001.','err');
   const q=qs!==''?parseInt(qs):null;
-  if(q===null||isNaN(q)||q<900||q>1000)return toast('Qualidade obrigatória entre 900 e 1000.','err');
+  if(q===null||isNaN(q)||q<500||q>1000)return toast('Qualidade obrigatória entre 500 e 1000.','err');
   try{
     const r=await fetch('/api/items',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,name:n,quantity:qty,quality:q,location:loc,notes:''})});
     if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}
@@ -971,7 +971,7 @@ async function adminAddObj(){
     const event_name=category==='Evento'?(document.getElementById('newObjEventoDesc').value.trim()||null):null;
     const r=await fetch('/api/objectives',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({item,note,category,target_qty,event_name})});
     if(!r.ok){const d=await r.json();return toast(d.error||'Erro.','err');}
-    document.getElementById('newObjNote').value='Mínimo Q900';
+    document.getElementById('newObjNote').value='Mínimo Q500';
     document.getElementById('newObjQty').value='';
     const evd=document.getElementById('newObjEventoDesc');if(evd)evd.value='';
     renderAdminObj();
@@ -1395,7 +1395,7 @@ async function confirmAdminEdit(){
   const loc=document.getElementById('mAELoc').value.trim();
   const unit=oreUnit(name);
   if(unit==='UND'?qty<1:qty<0.001)return toast('Quantidade inválida.','err');
-  if(quality===null||quality<900||quality>1000)return toast('Qualidade obrigatória entre 900 e 1000.','err');
+  if(quality===null||quality<500||quality>1000)return toast('Qualidade obrigatória entre 500 e 1000.','err');
   try{
     await fetch('/api/items',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:adminEditId,name,quantity:qty,quality,location:loc,notes:item.notes||''})});
     document.getElementById('mAdminEdit').style.display='none';
